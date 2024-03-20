@@ -31,28 +31,28 @@ export class AppController {
   }
 
   @Get("generate-invoice")
-  generateInvoice(@Query('order_id') order_id: string) {
-    return this.appService.generateInvoice(order_id);
+  generateInvoice(@Query('order_id') order_id: string,@Query('run_id') run_id: string) {
+    return this.appService.scheduleInvoiceGeneration(run_id,order_id);
   }
 
 }
 
 function convertToCSV(run_id, items : any[]) {
   // Add header row
-  const header = "sku,order_qty,available_qty,required"
+  const header = "sku,product_name,order_qty,available_qty,required"
+  const csvContent = [];
+  csvContent.push(header);
 
   // Loop through each order
   items.forEach(item => {
     // Add main header
-    const csvContent = [];
-    csvContent.push(header);
     // Loop through each line item
       // No need to extract data, just create empty cells
-    csvContent.push(`${item.sku}, ${item.order_qty}, ${item.available_qty}, ${item.required}`);
+    csvContent.push(`${item.sku},${item.product_name}, ${item.order_qty}, ${item.available_qty}, ${item.required}`);
     const csvString = csvContent.join('\n');
 
     // Write CSV to file
-    fs.writeFileSync(`.\\${run_id}.csv`, csvString);
+    fs.writeFileSync(`./${run_id}.csv`, csvString);
     console.log(`${run_id}.csv file created successfully!`);
   });
 
