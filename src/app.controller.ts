@@ -30,6 +30,11 @@ export class AppController {
     return this.appService.getOrdersOfRun(runId);
   }
 
+  @Get("stock-sync-runs")
+  getStockSyncRuns() {
+    return this.appService.getStockSyncRuns();
+  }
+
   @Get("generate-invoice")
   generateInvoice(@Query('order_id') order_id: string,@Query('run_id') run_id: string) {
     return this.appService.scheduleInvoiceGeneration(run_id,order_id);

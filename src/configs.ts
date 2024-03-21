@@ -1,0 +1,1 @@
+export let mongo_url = 'mongodb://abameerdeen:sajahafeel2216@ec2-13-234-20-8.ap-south-1.compute.amazonaws.com:27017'

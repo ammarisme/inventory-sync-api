@@ -2,6 +2,7 @@ const { MongoClient } = require('mongodb');
 import { Injectable } from '@nestjs/common';
 import * as invoicing from "./controllers/invoices";
 import { generate } from 'rxjs';
+import { mongo_url } from './configs';
 
 @Injectable()
 export class AppService {
@@ -18,6 +19,13 @@ export class AppService {
     return orders
   }
 
+  async getStockSyncRuns() {
+    const orders = await getCollection("stock_sync")
+    return orders
+  }
+
+
+  
   getRunTransfers(run_id): any {
     return getItem("runs", run_id)
   }
@@ -29,7 +37,7 @@ export class AppService {
 
 async function getCollection(collection_name) {
   try {
-    const client = await MongoClient.connect('mongodb://ec2-13-234-20-8.ap-south-1.compute.amazonaws.com:27017/');
+    const client = await MongoClient.connect(mongo_url);
     const db = client.db('catlitter'); // Assign connection to db after successful connection
 
     const docs = await db.collection(collection_name).find({}).toArray();
