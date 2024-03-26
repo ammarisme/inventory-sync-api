@@ -57,19 +57,19 @@ export class InventoryController {
       }
     }
   
-    for (let key in total_order_qtys) {
-      const available_product = available_stock[`"${key}"`]
+      for (let key in total_order_qtys) {
+        const available_product = available_stock[`"${key}"`]
 
-      if (available_product && total_order_qtys[key] > Number(available_product["Catlitter"])) {
-        transfers.push({
-          sku: key,
-          product_name: available_product["Product Name"],
-          order_qty: total_order_qtys[key],
-          available_qty: Number(available_product["Catlitter"]),
-          required: total_order_qtys[key] - Number(available_product["Catlitter"])
-        })
+        if (available_product && total_order_qtys[key] > Number(available_product["Catlitter"])) {
+          transfers.push({
+            sku: key,
+            product_name: available_product["Product Name"],
+            order_qty: total_order_qtys[key],
+            available_qty: Number(available_product["Catlitter"]),
+            required: total_order_qtys[key] - Number(available_product["Catlitter"])
+          })
+        }
       }
-    }
     return transfers;
   }
 
