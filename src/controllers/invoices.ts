@@ -1,18 +1,21 @@
 import { mongo_url } from "src/configs";
+import utils = require("../common/util.js");
+import mongo = require("../services/mongo.service.js");
 
 const fs = require('fs');
 const axios = require('axios');
 const { MongoClient } = require('mongodb');
+
 
 export async function generateInvoice(woocommerce_order_id) {
   try {
     var db = null // global variable to hold the connection
     const order = await getOrder(woocommerce_order_id)
 
-    updateDocument("invoices", {order_id : woocommerce_order_id}, {status: 3})
+    mongo.updateDocument("invoices", {order_id : woocommerce_order_id}, {status: 3})
     // Change the order status in the mongodb
   } catch (error) {
-    log(error)
+    utils.log(error)
   }
 }
 
@@ -59,7 +62,7 @@ async function updateOrderStatus(order_id, status) {
   // Call the PUT API to update the stock quantity
   const apiUrl = `https://catlitter.lk/wp-json/wc/v3/orders/${order_id}`;
   const data = {
-    status: status
+       status
   }
 
   try {
@@ -89,65 +92,61 @@ async function getProduct(id) {
   }
 }
 
-async function getCollection(collection_name) {
-  try {
-    const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter'); // Assign connection to db after successful connection
+// async function getCollection(collection_name) {
+//   try {
+//     const client = await MongoClient.connect(mongo_url);
+//     const db = client.db('catlitter'); // Assign connection to db after successful connection
 
-    const docs = await db.collection(collection_name).find({}).toArray();
-    console.log(docs)
+//     const docs = await db.collection(collection_name).find({}).toArray();
+//     console.log(docs)
 
-    client.close(); // Close the connection after use
-  } catch (err) {
-    console.error(err);
-  }
-}
+//     client.close(); // Close the connection after use
+//   } catch (err) {
+//     console.error(err);
+//   }
+// }
 
-async function deleteDocument(collection_name, filter) {
-  try {
-    const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+// async function deleteDocument(collection_name, filter) {
+//   try {
+//     const client = await MongoClient.connect(mongo_url);
+//     const db = client.db('catlitter');
 
-    const result = await db.collection(collection_name).deleteOne(filter);
-    console.log(`Documents deleted: ${result.deletedCount}`);
+//     const result = await db.collection(collection_name).deleteOne(filter);
+//     console.log(`Documents deleted: ${result.deletedCount}`);
 
-    client.close();
-  } catch (err) {
-    console.error(err);
-    // Handle deletion error with appropriate response (e.g., res.status(500).send('Error deleting document'))
-  }
-}
+//     client.close();
+//   } catch (err) {
+//     console.error(err);
+//     // Handle deletion error with appropriate response (e.g., res.status(500).send('Error deleting document'))
+//   }
+// }
 
-async function updateDocument(collection_name, filter, update) {
-  try {
-    const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+// async function updateDocument(collection_name, filter, update) {
+//   try {
+//     const client = await MongoClient.connect(mongo_url);
+//     const db = client.db('catlitter');
 
-    const result = await db.collection(collection_name).updateOne(filter, update);
-    console.log(`Documents modified: ${result.modifiedCount}`);
+//     const result = await db.collection(collection_name).updateOne(filter, update);
+//     console.log(`Documents modified: ${result.modifiedCount}`);
 
-    client.close();
-  } catch (err) {
-    console.error(err);
-    // Handle update error with appropriate response (e.g., res.status(500).send('Error updating document'))
-  }
-}
+//     client.close();
+//   } catch (err) {
+//     console.error(err);
+//     // Handle update error with appropriate response (e.g., res.status(500).send('Error updating document'))
+//   }
+// }
 
-async function insertDocument(collection_name, document) {
-  try {
-    const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+// async function insertDocument(collection_name, document) {
+//   try {
+//     const client = await MongoClient.connect(mongo_url);
+//     const db = client.db('catlitter');
 
-    const result = await db.collection(collection_name).insertOne(document);
-    console.log(`Document inserted with ID: ${result.insertedId}`);
+//     const result = await db.collection(collection_name).insertOne(document);
+//     console.log(`Document inserted with ID: ${result.insertedId}`);
 
-    client.close();
-  } catch (err) {
-    console.error(err);
-    // Handle insertion error with appropriate response (e.g., res.status(500).send('Error inserting document'))
-  }
-}
-
-function log(str) {
-  console.log('log: ' + str)
-}
+//     client.close();
+//   } catch (err) {
+//     console.error(err);
+//     // Handle insertion error with appropriate response (e.g., res.status(500).send('Error inserting document'))
+//   }
+// }
