@@ -38,6 +38,30 @@ async function getCollection(collection_name) {
     }
   }
 
+  async function getDocsByKeyword(collection_name, keyword) {
+    try {
+      // Replace with your actual MongoDB connection details
+      const client = await MongoClient.connect(mongo_url);
+      const db = client.db('catlitter');
+  
+      // Use regular expression for pattern matching (case-insensitive)
+      const regex = new RegExp(keyword, 'i'); // 'i' flag for case-insensitive search
+  
+      // Filter invoices based on invoice_number containing the keyword
+      const invoices = await db.collection(collection_name)
+        .find({ invoice_number: { $regex: regex } })
+        .toArray();
+  
+      console.log(invoices); // Log the retrieved invoices for debugging (optional)
+      await client.close(); // Ensure connection closure even with errors
+  
+      return invoices;
+  
+    } catch (err) {
+      console.error(err);
+      return []; // Return empty array if an error occurs
+    }
+  }
   async  function  deleteDocument(collection_name, filter) {
     try {
       const client = await MongoClient.connect(mongo_url);
@@ -141,5 +165,5 @@ async function getCollection(collection_name) {
   export = {
     getCollection: getCollection, deleteDocument: deleteDocument, updateDocument:updateDocument,
     insertDocument:insertDocument,upsertDocument:upsertDocument,getCollectionBy:getCollectionBy,
-    getFirstDocument: getFirstDocument, getCollectionColumns
+    getFirstDocument: getFirstDocument, getCollectionColumns, getDocsByKeyword
   };
