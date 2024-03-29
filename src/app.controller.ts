@@ -1,5 +1,7 @@
-import { Controller, Get, Res, Query } from '@nestjs/common';
+import { Controller, Get, Res, Query, Param, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
+import mongo = require("./services/mongo.service");
+import utils = require("./common/util");
 const fs = require('fs');
 
 
@@ -39,6 +41,35 @@ export class AppController {
   generateInvoice(@Query('order_id') order_id: string,@Query('run_id') run_id: string) {
     return this.appService.scheduleInvoiceGeneration(run_id,order_id);
   }
+
+  @Post('/test/:test_id')
+  async testAPI(
+    @Param('test_id') test_id: string,
+    @Body() updateData: any, // Update data received as JSON
+  ) {
+    try {
+      const updateResult = await mongo.upsertDocument(
+        'test-responses',
+        { "test_id" : test_id },
+        updateData,
+      );
+
+      return updateData;
+    } catch (error) {
+      // Handle errors appropriately, e.g., log the error and throw a specific exception
+      throw error;
+    }
+  }
+
+  @Get("/test/:test_id")
+  async getSetings(@Param("test_id") test_id: string) {
+      try {
+        const result = await mongo.getCollectionBy("test-responses", {"test_id": test_id});
+        return result[0];
+      } catch (error) {
+        utils.log(error)
+      }
+    }
 
 }
 

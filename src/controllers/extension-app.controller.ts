@@ -1,7 +1,7 @@
 import module = require("module");
 import utils = require("../common/util");
 import mongo = require("../services/mongo.service");
-import { Body, Controller, Get, Param, Put, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, Query } from "@nestjs/common";
 
 @Controller("extension-app")
 export class MobileAppController {
