@@ -1,1 +1,1 @@
-export let mongo_url = 'mongodb://abameerdeen:sajahafeel2216@erp.theselllerstack.com:27017'
+export let mongo_url = 'mongodb://abameerdeen:sajahafeel2216@erp.thesellerstack.com:27017'
