@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function convertToCSV(object_rows: any[]) {
+async function convertToCSV(object_rows: any[]) {
     try {
         fs.unlinkSync(`./transfer_sheet.csv`);
     } catch (error) {
@@ -26,7 +26,7 @@ function convertToCSV(object_rows: any[]) {
         csvContent += Object.values(item).map(escapeForCSV).join(",") + "\n";
       });
     // Write the CSV content to a file
-    fs.writeFile('transfer_sheet.csv', csvContent, (err) => {
+    fs.writeFileSync('./transfer_sheet.csv', csvContent, (err) => {
         if (err) {
             console.error("Error writing CSV file:", err);
         } else {

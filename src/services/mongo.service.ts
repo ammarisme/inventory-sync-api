@@ -77,6 +77,49 @@ async function getCollection(collection_name) {
     }
   }
 
+  
+async function countDocumentsWithFilter(collection_name, filter) {
+  try {
+    const client = await MongoClient.connect(mongo_url);
+    const db = client.db('catlitter');
+
+    // Use countDocuments to efficiently count the documents matching the filter
+    const count = await db.collection(collection_name).countDocuments(filter);
+
+    client.close();
+    return count;
+  } catch (err) {
+    console.error('Error counting documents:', err);
+    throw err; // Re-throw for potential error handling in NestJS
+  }
+}
+
+async function countStockAttributes(collection_name, filter) {
+  try {
+    const client = await MongoClient.connect(mongo_url);
+    const db = client.db('catlitter');
+
+    // Use aggregation with $objectToArray to convert the nested object to an array
+    // and then $size to get the length (number of key-value pairs)
+    const pipeline = [
+      { $match: filter }, // Apply filter if needed
+      {
+        $project: {
+          _id: 0, // Exclude _id field (optional)
+          stockCount: { $size: { $objectToArray: "$stock" } }
+        }
+      }
+    ];
+
+    const docs = await db.collection(collection_name).aggregate(pipeline).toArray();
+
+    client.close();
+    return docs[0].stockCount || 0; // Return the first element's stockCount or 0 if empty
+  } catch (err) {
+    console.error('Error counting stock attributes:', err);
+    throw err; // Re-throw for potential error handling in NestJS
+  }
+}
   async  function  updateDocument(collection_name, filter, update) {
     try {
       const client = await MongoClient.connect(mongo_url);
@@ -165,5 +208,6 @@ async function getCollection(collection_name) {
   export = {
     getCollection: getCollection, deleteDocument: deleteDocument, updateDocument:updateDocument,
     insertDocument:insertDocument,upsertDocument:upsertDocument,getCollectionBy:getCollectionBy,
-    getFirstDocument: getFirstDocument, getCollectionColumns, getDocsByKeyword
+    getFirstDocument: getFirstDocument, getCollectionColumns, getDocsByKeyword, countDocumentsWithFilter,
+    countStockAttributes
   };

@@ -14,6 +14,14 @@ export class AppService {
     return getCollection("runs");
   }
 
+  getOrderRunsPaginated(page, per_page): any {
+    return getOrderRunsPaginated("runs", {},  page*per_page , (page+1)*per_page);
+  }
+
+  getInventorySyncRunsPaginated(page, per_page): any {
+    return getCollectionWithinRangeFiltered("stock_sync", {},  page*per_page , (page+1)*per_page);
+  }
+
   async getOrdersOfRun(runId) {
     const orders = await getCollectionBy("invoices",{run_id : runId})
     return orders
@@ -48,6 +56,90 @@ async function getCollection(collection_name) {
   }
 }
 
+async function getCollectionWithinRangeFiltered(collection_name, filter, from, to) {
+  try {
+    const client = await MongoClient.connect(mongo_url);
+    const db = client.db('catlitter');
+
+    // Use aggregation framework with $unwind and $group to correctly count orders
+    const pipeline = [
+      {
+        $project: {
+          _id: 0, // Exclude _id field (optional)
+          time: { // Format updatedAt for readability
+            $toString: "$updatedAt" // Convert to string first
+          },
+          run_id: 1,
+          updated_products: 1,
+          // Include other desired fields here
+          
+        }
+      },
+      // Apply skip and limit after grouping for accurate pagination
+      { $skip: from },
+      { $limit: to - from + 1 }
+    ];
+
+    const docs = await db.collection(collection_name).aggregate(pipeline).toArray();
+
+    docs.forEach(doc => {
+      doc.time = new Date(doc.time).toLocaleString();
+    });
+
+    client.close();
+    return docs;
+  } catch (err) {
+    console.error('Error fetching collection within range:', err);
+    throw err; // Re-throw for potential error handling in NestJS
+  }
+}
+
+async function getOrderRunsPaginated(collection_name, filter, from, to) {
+  try {
+    const client = await MongoClient.connect(mongo_url);
+    const db = client.db('catlitter');
+
+    // Use aggregation framework with $unwind and $group to correctly count orders
+    const pipeline = [
+      { $match: filter },
+      { $unwind: "$transfers.orders" }, // Unwind the orders array to access individual orders
+      {
+        $group: {
+          _id: "$run_id", // Group by run_id
+          
+          time: { $max: "$updatedAt" }, // Get the most recent updatedAt
+          successfull_orders: {
+            $sum: {
+              $cond: [{ $eq: ["$transfers.orders.status", 1] }, 1, 0]
+            }
+          },
+          failed_orders: {
+            $sum: {
+              $cond: [{ $eq: ["$transfers.orders.status", 2] }, 1, 0]
+            }
+          },
+        }
+      },
+      // Apply skip and limit after grouping for accurate pagination
+      { $skip: from },
+      { $limit: to - from + 1 }
+    ];
+
+    const docs = await db.collection(collection_name).aggregate(pipeline).toArray();
+
+    docs.forEach(doc => {
+      doc.time = new Date(doc.time).toLocaleString();
+    });
+
+    client.close();
+    return docs;
+  } catch (err) {
+    console.error('Error fetching collection within range:', err);
+    throw err; // Re-throw for potential error handling in NestJS
+  }
+}
+
+
 async function getCollectionBy(collection_name,filter) {
   try {
     const client = await MongoClient.connect(mongo_url);
@@ -60,6 +152,7 @@ async function getCollectionBy(collection_name,filter) {
     console.error(err);
   }
 }
+
 
 async function getItem(collection_name, id) {
   try {

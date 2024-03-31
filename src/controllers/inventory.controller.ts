@@ -76,7 +76,7 @@ export class InventoryController {
   @Get('/download-pending-transfers/')
   async downloadTransferSheet(@Res() res) {
     const transfers = await this.getTransfers(); // Fetch data for CSV
-    files.convertToCSV(transfers)
+    await files.convertToCSV(transfers)
     return res.sendFile(`transfer_sheet.csv`, { root: './' });
   }
 

@@ -14,10 +14,16 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get("order-runs")
-  getOrderRuns(): string {
-    return this.appService.getOrderRuns();
+  @Get("order-runs-paginated")
+  getOrderRuns(@Query('per_page') per_page: Number, @Query('page') page: Number): string {
+    return this.appService.getOrderRunsPaginated(Number(page),Number(per_page));
   }
+
+  @Get("inventory-sync-runs-paginated")
+  getInventorySyncRuns(@Query('per_page') per_page: Number, @Query('page') page: Number): string {
+    return this.appService.getInventorySyncRunsPaginated(Number(page),Number(per_page));
+  }
+
 
   @Get('run-transfers')
   async getRunTransfers(@Query('run_id') runId: string, @Res() res) {

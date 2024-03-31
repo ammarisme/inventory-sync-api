@@ -6,10 +6,11 @@ import { OrdersService } from './services/orders.service';
 import { InventoryController } from './controllers/inventory.controller';
 import { InvoiceController } from './controllers/invoice.controller';
 import { MobileAppController } from './controllers/extension-app.controller';
+import { DashboardController } from './controllers/dashboard.controller';
 
 @Module({
   imports: [],
-  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController],
+  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController, DashboardController],
   providers: [AppService, OrdersService],
 })
 export class AppModule {}
