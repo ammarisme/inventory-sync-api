@@ -1,11 +1,11 @@
 import { MongoClient } from 'mongodb'; // Assuming you're using MongoDB
-import { mongo_url } from 'src/configs';
+import { mongo_url, mydb } from 'src/configs';
 
 
 async function getCollection(collection_name) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter'); // Assign connection to db after successful connection
+      const db = client.db(mydb); // Assign connection to db after successful connection
 
       const docs = await db.collection(collection_name).find({}).toArray();
       console.log(docs)
@@ -20,7 +20,7 @@ async function getCollection(collection_name) {
   async function getCollectionColumns(collection_name, columns) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
   
       // Specify the columns to project using syntax for projected fields
       const docs = await db
@@ -38,11 +38,25 @@ async function getCollection(collection_name) {
     }
   }
 
+  async function updateCollectionStatus(collection_name, filter, update) {
+    try {
+      const client = await MongoClient.connect(mongo_url);
+      const db = client.db(mydb);
+      const updateResult = await db.collection(collection_name).updateMany(filter, {
+        $set: update}, // Set the status to 4
+      );
+  
+      console.log(`Updated ${updateResult.modifiedCount} documents.`);
+      await client.close();
+    } catch (err) {
+      console.error("Error updating collection:", err);
+    }
+  }
   async function getDocsByKeyword(collection_name, keyword) {
     try {
       // Replace with your actual MongoDB connection details
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
   
       // Use regular expression for pattern matching (case-insensitive)
       const regex = new RegExp(keyword, 'i'); // 'i' flag for case-insensitive search
@@ -65,7 +79,7 @@ async function getCollection(collection_name) {
   async  function  deleteDocument(collection_name, filter) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
 
       const result = await db.collection(collection_name).deleteOne(filter);
       console.log(`Documents deleted: ${result.deletedCount}`);
@@ -81,7 +95,7 @@ async function getCollection(collection_name) {
 async function countDocumentsWithFilter(collection_name, filter) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     // Use countDocuments to efficiently count the documents matching the filter
     const count = await db.collection(collection_name).countDocuments(filter);
@@ -97,7 +111,7 @@ async function countDocumentsWithFilter(collection_name, filter) {
 async function countStockAttributes(collection_name, filter) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     // Use aggregation with $objectToArray to convert the nested object to an array
     // and then $size to get the length (number of key-value pairs)
@@ -123,7 +137,7 @@ async function countStockAttributes(collection_name, filter) {
   async  function  updateDocument(collection_name, filter, update) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
 
       const result = await db.collection(collection_name).updateOne(filter, update);
       console.log(`Documents modified: ${result.modifiedCount}`);
@@ -137,7 +151,7 @@ async function countStockAttributes(collection_name, filter) {
   async  function  insertDocument(collection_name, document) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
 
       const currentDate = new Date();
 
@@ -158,7 +172,7 @@ async function countStockAttributes(collection_name, filter) {
   async  function  upsertDocument(collection_name, filter, document) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter');
+      const db = client.db(mydb);
 
       const currentDate = new Date();
 
@@ -186,7 +200,7 @@ async function countStockAttributes(collection_name, filter) {
   async  function  getCollectionBy(collection_name,filter) {
     try {
       const client = await MongoClient.connect(mongo_url);
-      const db = client.db('catlitter'); // Assign connection to db after successful connection
+      const db = client.db(mydb); // Assign connection to db after successful connection
   
       const docs = await db.collection(collection_name).find(filter).toArray();
       client.close(); // Close the connection after use
@@ -209,5 +223,5 @@ async function countStockAttributes(collection_name, filter) {
     getCollection: getCollection, deleteDocument: deleteDocument, updateDocument:updateDocument,
     insertDocument:insertDocument,upsertDocument:upsertDocument,getCollectionBy:getCollectionBy,
     getFirstDocument: getFirstDocument, getCollectionColumns, getDocsByKeyword, countDocumentsWithFilter,
-    countStockAttributes
+    countStockAttributes, updateCollectionStatus
   };

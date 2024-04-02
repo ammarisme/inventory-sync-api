@@ -1,4 +1,4 @@
-import { mongo_url } from "src/configs";
+import { woocommerce_url } from "src/configs.js";
 import utils = require("../common/util.js");
 import mongo = require("../services/mongo.service.js");
 
@@ -23,7 +23,7 @@ export async function generateInvoice(woocommerce_order_id) {
 async function getOrder(woocommerce_order_id) {
   while (true) {
     try {
-      const url = `https://catlitter.lk/wp-json/wc/v3/orders/${woocommerce_order_id}`;
+      const url = `${woocommerce_url}/wp-json/wc/v3/orders/${woocommerce_order_id}`;
       const headers = {
         Authorization: 'Basic Y2tfNDdjMzk3ZjNkYzY2OGMyY2UyZThlMzU4YjdkOWJlYjZkNmEzMTgwMjpjc19kZjk0MDdkOWZiZDVjYzE0NTdmMDEwNTY3ODdkMjFlMTAyZmUwMTJm',
       };
@@ -38,7 +38,7 @@ async function getOrder(woocommerce_order_id) {
 
 async function createOrderNote(order_id, note) {
   // Call the PUT API to update the stock quantity
-  const apiUrl = `https://catlitter.lk/wp-json/wc/v3/orders/${order_id}/notes`;
+  const apiUrl = `${woocommerce_url}/wp-json/wc/v3/orders/${order_id}/notes`;
   const data = {
     note: note,
     author: "system",
@@ -60,7 +60,7 @@ async function createOrderNote(order_id, note) {
 
 async function updateOrderStatus(order_id, status) {
   // Call the PUT API to update the stock quantity
-  const apiUrl = `https://catlitter.lk/wp-json/wc/v3/orders/${order_id}`;
+  const apiUrl = `${woocommerce_url}/wp-json/wc/v3/orders/${order_id}`;
   const data = {
        status
   }
@@ -80,7 +80,7 @@ async function updateOrderStatus(order_id, status) {
 
 async function getProduct(id) {
   try {
-    const url = 'https://catlitter.lk/wp-json/wc/v3/products/' + id;
+    const url = `${woocommerce_url}/wp-json/wc/v3/products/` + id;
     const headers = {
       Authorization: 'Basic Y2tfNDdjMzk3ZjNkYzY2OGMyY2UyZThlMzU4YjdkOWJlYjZkNmEzMTgwMjpjc19kZjk0MDdkOWZiZDVjYzE0NTdmMDEwNTY3ODdkMjFlMTAyZmUwMTJm',
     };
@@ -91,62 +91,3 @@ async function getProduct(id) {
     throw new Error(`Failed to call API: ${error.message}`);
   }
 }
-
-// async function getCollection(collection_name) {
-//   try {
-//     const client = await MongoClient.connect(mongo_url);
-//     const db = client.db('catlitter'); // Assign connection to db after successful connection
-
-//     const docs = await db.collection(collection_name).find({}).toArray();
-//     console.log(docs)
-
-//     client.close(); // Close the connection after use
-//   } catch (err) {
-//     console.error(err);
-//   }
-// }
-
-// async function deleteDocument(collection_name, filter) {
-//   try {
-//     const client = await MongoClient.connect(mongo_url);
-//     const db = client.db('catlitter');
-
-//     const result = await db.collection(collection_name).deleteOne(filter);
-//     console.log(`Documents deleted: ${result.deletedCount}`);
-
-//     client.close();
-//   } catch (err) {
-//     console.error(err);
-//     // Handle deletion error with appropriate response (e.g., res.status(500).send('Error deleting document'))
-//   }
-// }
-
-// async function updateDocument(collection_name, filter, update) {
-//   try {
-//     const client = await MongoClient.connect(mongo_url);
-//     const db = client.db('catlitter');
-
-//     const result = await db.collection(collection_name).updateOne(filter, update);
-//     console.log(`Documents modified: ${result.modifiedCount}`);
-
-//     client.close();
-//   } catch (err) {
-//     console.error(err);
-//     // Handle update error with appropriate response (e.g., res.status(500).send('Error updating document'))
-//   }
-// }
-
-// async function insertDocument(collection_name, document) {
-//   try {
-//     const client = await MongoClient.connect(mongo_url);
-//     const db = client.db('catlitter');
-
-//     const result = await db.collection(collection_name).insertOne(document);
-//     console.log(`Document inserted with ID: ${result.insertedId}`);
-
-//     client.close();
-//   } catch (err) {
-//     console.error(err);
-//     // Handle insertion error with appropriate response (e.g., res.status(500).send('Error inserting document'))
-//   }
-// }

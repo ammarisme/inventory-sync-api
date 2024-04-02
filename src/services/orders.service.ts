@@ -27,15 +27,15 @@ export class OrdersService {
 
     await Promise.all(
       orders.map(async (order) => {
-        const invoiceNumber = `DRZ${order.daraz_id}`;
+        const invoiceNumber = `DRZ${order.order_number}`;
         const invoiceData = {
             run_id : run_id,
-        id : order.daraz_id,
+        id : order.order_number,
           invoice_number : invoiceNumber,
           status: 4, // Assuming status 4 represents something for imported orders
           invoice_data: order, // Assuming "order" object has relevant data
         };
-        await mongo.insertDocument("invoices",invoiceData);
+        await mongo.upsertDocument("invoices", { invoice_number : invoiceNumber} ,invoiceData);
       })
     );
 
@@ -48,19 +48,19 @@ export class OrdersService {
   }
 
   // Replace this with your logic to parse the Daraz CSV data into an array of orders
-  parseDarazCsvData(data: string): { daraz_id: string; line_items: any[] }[] {
-    const lines = data.split('\r\n'); // Split data into lines
+  parseDarazCsvData(data: string): { order_number: string; line_items: any[] }[] {
+    const lines = data.split('\n'); // Split data into lines
   
     // Extract header row (assuming the first line is the header)
-    const headers = lines[0].split(',');
+    const headers = lines[0].split(';');
   
     // Create an empty result array to store parsed data
-    const parsedData: { daraz_id: string; line_items: any[] }[] = [];
+    const parsedData: { order_number: string; line_items: any[] }[] = [];
   
     // Loop through remaining lines (data lines)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
-      const values = line.split(',');
+      const values = line.split(';');
   
       // Create an object for the current line item
       const lineItem = Object.fromEntries(
@@ -68,15 +68,15 @@ export class OrdersService {
       );
   
       // Find the order with the matching Daraz Id
-      const matchingOrder = parsedData.find((order) => order.daraz_id === lineItem['Daraz Id']);
+      const matchingOrder = parsedData.find((order) => order.order_number == lineItem['Order Number']);
   
       if (matchingOrder) {
         // Order already exists, push the line item to its line_items array
-        matchingOrder.line_items.push(lineItem);
+        parsedData.find((order) => order.order_number === lineItem['Order Number']).line_items.push(lineItem);
       } else {
         // New order, create a new entry in the parsedData array
         parsedData.push({
-          daraz_id: lineItem['Daraz Id'],
+          order_number: lineItem['Order Number'],
           line_items: [lineItem],
         });
       }

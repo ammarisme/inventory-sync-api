@@ -1,3 +1,4 @@
+import { woocommerce_url } from "src/configs";
 
 const axios = require('axios');
 
@@ -5,7 +6,7 @@ const axios = require('axios');
 async function getOrdersByStatus(status: string) {
     while (true) {
       try {
-        const url = `https://catlitter.lk/wp-json/wc/v3/orders?status=${status}&page=1&per_page=100`;
+        const url = `${woocommerce_url}/wp-json/wc/v3/orders?status=${status}&page=1&per_page=100`;
         const headers = {
           Authorization: 'Basic Y2tfNDdjMzk3ZjNkYzY2OGMyY2UyZThlMzU4YjdkOWJlYjZkNmEzMTgwMjpjc19kZjk0MDdkOWZiZDVjYzE0NTdmMDEwNTY3ODdkMjFlMTAyZmUwMTJm',
         };
@@ -20,7 +21,7 @@ async function getOrdersByStatus(status: string) {
   
   async function createOrderNote(order_id, note) {
     // Call the PUT API to update the stock quantity
-    const apiUrl = `https://catlitter.lk/wp-json/wc/v3/orders/${order_id}/notes`;
+    const apiUrl = `${woocommerce_url}/wp-json/wc/v3/orders/${order_id}/notes`;
     const data = {
       note: note,
       author: "system",
@@ -42,7 +43,7 @@ async function getOrdersByStatus(status: string) {
   
   async function updateOrderStatus(order_id, status) {
     // Call the PUT API to update the stock quantity
-    const apiUrl = `https://catlitter.lk/wp-json/wc/v3/orders/${order_id}`;
+    const apiUrl = `${woocommerce_url}/wp-json/wc/v3/orders/${order_id}`;
     const data = {
       status: status
     }
@@ -63,7 +64,7 @@ async function getOrdersByStatus(status: string) {
   
   async function getProduct(id) {
     try {
-      const url = 'https://catlitter.lk/wp-json/wc/v3/products/' + id;
+      const url = `${woocommerce_url}/wp-json/wc/v3/products/` + id;
       const headers = {
         Authorization: 'Basic Y2tfNDdjMzk3ZjNkYzY2OGMyY2UyZThlMzU4YjdkOWJlYjZkNmEzMTgwMjpjc19kZjk0MDdkOWZiZDVjYzE0NTdmMDEwNTY3ODdkMjFlMTAyZmUwMTJm',
       };

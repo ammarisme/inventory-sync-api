@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 import { Injectable } from '@nestjs/common';
 import * as invoicing from "./controllers/invoices";
 import { generate } from 'rxjs';
-import { mongo_url } from './configs';
+import { mongo_url, mydb } from './configs';
 
 @Injectable()
 export class AppService {
@@ -46,7 +46,7 @@ export class AppService {
 async function getCollection(collection_name) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter'); // Assign connection to db after successful connection
+    const db = client.db(mydb); // Assign connection to db after successful connection
 
     const docs = await db.collection(collection_name).find({}).toArray();
     client.close(); // Close the connection after use
@@ -59,7 +59,7 @@ async function getCollection(collection_name) {
 async function getCollectionWithinRangeFiltered(collection_name, filter, from, to) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     // Use aggregation framework with $unwind and $group to correctly count orders
     const pipeline = [
@@ -97,7 +97,7 @@ async function getCollectionWithinRangeFiltered(collection_name, filter, from, t
 async function getOrderRunsPaginated(collection_name, filter, from, to) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     // Use aggregation framework with $unwind and $group to correctly count orders
     const pipeline = [
@@ -143,7 +143,7 @@ async function getOrderRunsPaginated(collection_name, filter, from, to) {
 async function getCollectionBy(collection_name,filter) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter'); // Assign connection to db after successful connection
+    const db = client.db(mydb); // Assign connection to db after successful connection
 
     const docs = await db.collection(collection_name).find(filter).toArray();
     client.close(); // Close the connection after use
@@ -157,7 +157,7 @@ async function getCollectionBy(collection_name,filter) {
 async function getItem(collection_name, id) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter'); // Assign connection to db after successful connection
+    const db = client.db(mydb); // Assign connection to db after successful connection
 
     const docs = await db.collection(collection_name).find({run_id : id}).toArray();
     client.close(); // Close the connection after use
@@ -171,7 +171,7 @@ async function getItem(collection_name, id) {
 async function deleteDocument(collection_name, filter) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     const result = await db.collection(collection_name).deleteOne(filter);
     console.log(`Documents deleted: ${result.deletedCount}`);
@@ -186,7 +186,7 @@ async function deleteDocument(collection_name, filter) {
 async function updateDocument(collection_name, filter, update) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     const result = await db.collection(collection_name).updateOne(filter, update);
     console.log(`Documents modified: ${result.modifiedCount}`);
@@ -201,7 +201,7 @@ async function updateDocument(collection_name, filter, update) {
 async function insertDocument(collection_name, document) {
   try {
     const client = await MongoClient.connect(mongo_url);
-    const db = client.db('catlitter');
+    const db = client.db(mydb);
 
     const result = await db.collection(collection_name).insertOne(document);
     console.log(`Document inserted with ID: ${result.insertedId}`);
