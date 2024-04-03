@@ -37,7 +37,7 @@ export class InvoiceController {
   @Get("pending")
   async getInvoicesByStatus() {
     try {
-      const desiredColumns = { invoice_number: 1, status: 1, createdAt: 1, source_order_number:1 }; // Only include fields A, B, and C
+      const desiredColumns = { invoice_number: 1, status: 1, createdAt: 1, source_order_number:1, updatedAt : 1 }; // Only include fields A, B, and C
 
       let result = await mongo.getCollectionColumns("invoices", desiredColumns);
       let myresult = []
@@ -57,13 +57,14 @@ export class InvoiceController {
   @Get("scheduled")
   async getScheduled() {
     try {
-      const desiredColumns = { invoice_number: 1, status: 1, createdAt: 1, source_order_number:1 }; // Only include fields A, B, and C
+      const desiredColumns = { invoice_number: 1, status: 1, createdAt: 1, source_order_number:1 , updatedAt : 1}; // Only include fields A, B, and C
 
       let result = await mongo.getCollectionColumns("invoices", desiredColumns);
       let myresult = []
       result.map((invoice) => {
         if(invoice.status == 4){
           invoice.status = "scheduled"
+          invoice.updatedAt = utils.convertToIndiaTime(invoice.updatedAt)
           myresult.push(invoice)
         }
       });
@@ -73,6 +74,28 @@ export class InvoiceController {
       utils.log(error)
     }
   }
+
+  @Get("success")
+  async getSuccessfullInvoces() {
+    try {
+      const desiredColumns = { invoice_number: 1, status: 1, createdAt: 1, source_order_number:1 , updatedAt : 1}; // Only include fields A, B, and C
+
+      let result = await mongo.getCollectionColumns("invoices", desiredColumns);
+      let myresult = []
+      result.map((invoice) => {
+        if(invoice.status == 2){
+          invoice.status = "successfull"
+          invoice.updatedAt = utils.convertToIndiaTime(invoice.updatedAt)
+          myresult.push(invoice)
+        }
+      });
+  
+      return myresult
+    } catch (error) {
+      utils.log(error)
+    }
+  }
+
 
 
 

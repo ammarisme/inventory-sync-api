@@ -7,10 +7,11 @@ import { InventoryController } from './controllers/inventory.controller';
 import { InvoiceController } from './controllers/invoice.controller';
 import { MobileAppController } from './controllers/extension-app.controller';
 import { DashboardController } from './controllers/dashboard.controller';
+import { UserController } from './controllers/user.controller';
 
 @Module({
   imports: [],
-  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController, DashboardController],
+  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController, DashboardController,UserController],
   providers: [AppService, OrdersService],
 })
 export class AppModule {}
