@@ -163,6 +163,7 @@ async function countStockAttributes(collection_name, filter) {
       console.log(`Document inserted with ID: ${result.insertedId}`);
 
       client.close();
+      return result
     } catch (err) {
       console.error(err);
       // Handle insertion error with appropriate response (e.g., res.status(500).send('Error inserting document'))

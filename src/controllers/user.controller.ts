@@ -1,7 +1,7 @@
 import module = require("module");
 import utils = require("../common/util");
 import mongo = require("../services/mongo.service");
-import { Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import  email = require("../services/email.service");
 
 @Controller("user")
@@ -33,4 +33,35 @@ email.sendEmail(recipientEmail, subject, text, html)
       utils.log(error)
     }
   }
+
+  @Post("/login")
+  async login(
+    @Body() logindata: any,
+  ) {
+    try {
+        const user = await mongo.getFirstDocument("users", {username : logindata.username, password: logindata.password})
+        return {
+            status : user? "success" : "failed"
+        }
+      // Generate a random 4-digit number
+    }catch(error){
+        utils.log(error)
+    }
+}
+
+@Post("/signup")
+  async signup(
+    @Body() logindata: any,
+  ) {
+    try {
+        const user = await mongo.insertDocument("users", {username : logindata.username, password: logindata.password})
+        return {
+            status : user? "success" : "failed"
+        }
+      // Generate a random 4-digit number
+    }catch(error){
+        utils.log(error)
+    }
+}
+
 }

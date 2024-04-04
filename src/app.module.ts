@@ -8,10 +8,12 @@ import { InvoiceController } from './controllers/invoice.controller';
 import { MobileAppController } from './controllers/extension-app.controller';
 import { DashboardController } from './controllers/dashboard.controller';
 import { UserController } from './controllers/user.controller';
+import { SharedFunctions } from './controllers/sample-controller';
 
 @Module({
   imports: [],
-  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController, DashboardController,UserController],
+  controllers: [AppController, OrdersController, InventoryController,InvoiceController,MobileAppController, DashboardController,
+    UserController, SharedFunctions],
   providers: [AppService, OrdersService],
 })
 export class AppModule {}

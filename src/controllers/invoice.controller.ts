@@ -21,6 +21,7 @@ export class InvoiceController {
       utils.log(error)
     }
   }
+  
   @Get("/reschedule-all-pending")
   async rescheduleAll(@Param("client_id") client_id: string) {
     try {
