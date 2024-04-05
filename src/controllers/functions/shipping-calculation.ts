@@ -21,7 +21,7 @@ export default function targetFunction (parameters : any){
     let total = totalBeforeDiscounts - totalLineDiscounts
 
     
-    let payment_handling_fee= 101;
+    let payment_handling_fee= 201;
     let order_discounts = 101
 
 
