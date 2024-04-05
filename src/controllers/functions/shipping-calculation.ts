@@ -20,9 +20,14 @@ export default function targetFunction (parameters : any){
     });
     let total = totalBeforeDiscounts - totalLineDiscounts
 
-    let shipping_charges = 101
+    
     let payment_handling_fee= 101;
     let order_discounts = 101
+
+
+    let shipping_method_id = "flat_rate";
+    let shipping_method_title = "Flat Rate";
+    let shipping_total = 300.00
     
     return {
         "input" : parameters,
@@ -31,9 +36,14 @@ export default function targetFunction (parameters : any){
             "totalBeforeDiscounts": totalBeforeDiscounts.toFixed(2),
             "totalLineDiscounts" : totalLineDiscounts.toFixed(2),
             "total" : total.toFixed(2),
-            "shipping_charges" : shipping_charges.toFixed(2),
             "payment_handling_fee" : payment_handling_fee.toFixed(2),
             "order_discounts" : order_discounts.toFixed(2),
+            "shipping" : {
+                "shipping_method_id" : shipping_method_id,
+                "shipping_method_title" : shipping_method_title,
+                "shipping_total" : shipping_total
+
+            }
         }
     };
 }
