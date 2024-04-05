@@ -20,9 +20,9 @@ export default function targetFunction (parameters : any){
     });
     let total = totalBeforeDiscounts - totalLineDiscounts
 
-    let shipping_charges = 0
-    let payment_handling_fee= 0;
-    let order_discounts = 0
+    let shipping_charges = 101
+    let payment_handling_fee= 101;
+    let order_discounts = 101
     
     return {
         "input" : parameters,
