@@ -41,7 +41,7 @@ export default function targetFunction (parameters : any){
             "shipping" : {
                 "shipping_method_id" : shipping_method_id,
                 "shipping_method_title" : shipping_method_title,
-                "shipping_total" : shipping_total
+                "shipping_total" : shipping_total.toFixed(2)
 
             }
         }
