@@ -211,6 +211,18 @@ async function countStockAttributes(collection_name, filter) {
     }
   }
 
+  async  function  executeQuery(collection_name, aggregation, filter) {
+    try {
+      const client = await MongoClient.connect(mongo_url);
+      const db = client.db(mydb); // Assign connection to db after successful connection
+      const results = await db.collection(collection_name).aggregate(aggregation).toArray();
+      client.close()
+      return results
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   async  function  getFirstDocument(collection_name,filter) {
     try {
       const docs = await getCollectionBy(collection_name, filter)
@@ -224,5 +236,5 @@ async function countStockAttributes(collection_name, filter) {
     getCollection: getCollection, deleteDocument: deleteDocument, updateDocument:updateDocument,
     insertDocument:insertDocument,upsertDocument:upsertDocument,getCollectionBy:getCollectionBy,
     getFirstDocument: getFirstDocument, getCollectionColumns, getDocsByKeyword, countDocumentsWithFilter,
-    countStockAttributes, updateCollectionStatus
+    countStockAttributes, updateCollectionStatus, executeQuery
   };
