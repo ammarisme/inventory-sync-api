@@ -34,7 +34,6 @@ export class InvoiceController {
   }
 
  
-
   @Get("pending")
   async getInvoicesByStatus() {
     try {

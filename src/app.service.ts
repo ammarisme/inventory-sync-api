@@ -6,9 +6,7 @@ import { mongo_url, mydb } from './configs';
 
 @Injectable()
 export class AppService {
-  getHello(): string {
-    return 'Hello World!';
-  }
+  
 
   getOrderRuns(): any {
     return getCollection("runs");

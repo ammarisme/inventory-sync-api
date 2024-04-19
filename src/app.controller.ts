@@ -9,10 +9,7 @@ const fs = require('fs');
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get("hello")
-  getHello(): string {
-    return this.appService.getHello();
-  }
+
 
   @Get("order-runs-paginated")
   getOrderRuns(@Query('per_page') per_page: Number, @Query('page') page: Number): string {
