@@ -190,13 +190,14 @@ export class Refund {
   line_items: [];
   order_total: number;
   return_reason?: ReturnReason; // Reason code, remark
-  logistics_chain?: LogisticsChain[]; // Array of LogisticsChain objects
+  courier_statuses?: []; // Array of LogisticsChain objects
   shipping_fee?: number;
   cod_fee?: number;
   selected_payment_method?: SelectedPaymentMethod; // Selected payment method object
   payments?: Payment[]; // Array of Payment objects
   refunds?: Refund[]; // Array of Refund objects
   customer: Customer;
+  tracking_status: AddTrackingStatus[];
 }
 
 export const OrderSchema = new mongoose.Schema({
@@ -208,7 +209,6 @@ export const OrderSchema = new mongoose.Schema({
   line_items: [],
   order_total: Number,
   return_reason: {},
-  logistics_chain: [], // Array of LogisticsChain objects
   shipping_fee: Number,
   cod_fee: Number,
   selected_payment_method: {},
@@ -217,6 +217,7 @@ export const OrderSchema = new mongoose.Schema({
   customer: {},
   tracking_number : String,
   courier_id : String,
+  tracking_status: [],
 });
 
 mongoose.model('orders', OrderSchema  );
@@ -230,7 +231,7 @@ export class CreateOrderDto {
   line_items: [];
   order_total: Number;
   return_reason: {};
-  logistics_chain: [];
+  tracking_status: AddTrackingStatus[];
   shipping_fee: Number;
   cod_fee: Number;
   selected_payment_method: {};
@@ -248,4 +249,10 @@ export class UpdateTrackingDto {
   order_id: String;
   courier_id: String;
   tracking_number: String;
+}
+
+export class AddTrackingStatus {
+  order_id: String;
+  courier_id: String;
+  message: String;
 }

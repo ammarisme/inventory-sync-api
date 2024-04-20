@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Put } from '@nestjs/common';
-import { CreateOrderDto, Order, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
+import { Controller, Get, Post, Body, Put, Param } from '@nestjs/common';
+import { AddTrackingStatus, CreateOrderDto, Order, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { OrderService } from '../models/order/order.service';
 
 
@@ -17,6 +17,12 @@ export class OrderController {
       }
     }
   }
+  @Post("/add-tracking-status") // Define the new endpoint for adding tracking status
+  async addTrackingStatus(@Body() dto: AddTrackingStatus) {
+    // You may want to add validation logic here if needed
+    return this.service.addTrackingStatus(dto.order_id, dto);
+  }
+
 
   @Put("/update-status")
   async updateStatus(@Body() dto: UpdateOrderStatusDto) {
@@ -43,5 +49,10 @@ export class OrderController {
   @Get()
   async findAll(): Promise<Order[]> {
     return this.service.findAll();
+  }
+
+  @Get("/by-status/:status")
+  async findByStatus(@Param("status") status: string): Promise<Order[]> {
+    return this.service.findOrdersByStatus(status);
   }
 }
