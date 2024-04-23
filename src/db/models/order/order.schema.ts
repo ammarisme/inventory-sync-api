@@ -9,6 +9,7 @@ export enum OrderStatuses {
   order_confirmed = 	'order_confirmed',
   customer_cancelled=  'customer_cancelled',
   seller_cancelled=  'seller_cancelled',
+  shipping_scheduled = "shipping_scheduled",
 
   payment_pending = 	'payment_pending',
   payment_failed = 	'payment_failed',

@@ -5,7 +5,7 @@ import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import  email = require("../services/email.service");
 
 @Controller("user")
-export class UserController {
+export class OldUserController {
 
 
   @Post("/send-otp")
