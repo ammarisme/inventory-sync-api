@@ -45,6 +45,14 @@ export class Customer {
 
   @Prop({ required: false })
   longitude?: number; // Optional longitude
+
+  first_name : string;
+  last_name : string;
+  phone : string;
+  email : string;
+  address1 : string;
+  address2 : string;
+  state : string;
 }
 
 // File Object (Represents a file linked to an order note)
@@ -57,21 +65,7 @@ export class File {
   filename?: string; // Optional filename of the uploaded file (optional, for reference)
 }
 
-// Order Note Object
-// @Schema()
-// export class OrderNote {
-//   @Prop({ required: false })
-//   text: string; // Order note text
 
-//   @Prop({ required: false })
-//   createdBy: string; // Who created the note (e.g., username, user ID)
-
-//   @Prop({ required: false })
-//   createdAt?: Date; // Optional creation timestamp
-
-//   @Prop({ required: false })
-//   file?: File; // Optional File object for a linked file
-// }
 
 @Schema()
 export class ReturnReason {
@@ -183,11 +177,12 @@ export class Refund {
  export interface Order extends Document {
   order_id: String;
   invoice_number?: String;
-  tracking_number : String,
-  courier_id : String,
+  tracking_number : String;
+  courier_id : String;
   weight?: number;
-  dimensions?: {},
-  status: {};
+  dimensions?: {};
+  status: String;
+  status_history : [];
   line_items: [];
   order_total: number;
   return_reason?: ReturnReason; // Reason code, remark
@@ -207,6 +202,7 @@ export const OrderSchema = new mongoose.Schema({
   weight: Number,
   dimensions: {},
   status: String,
+  status_history : [],
   line_items: [],
   order_total: Number,
   return_reason: {},
@@ -229,7 +225,8 @@ export class CreateOrderDto {
   weight: Number;
   dimensions: {};
   status: String;
-  line_items: [];
+  status_history : [];
+  line_items: LineItem[];
   order_total: Number;
   return_reason: {};
   tracking_status: AddTrackingStatus[];
@@ -238,12 +235,15 @@ export class CreateOrderDto {
   selected_payment_method: {};
   payments: []; // Array of Payment objects
   refunds: []; // Array of Refund objects
-  customer: {};
+  customer: Customer;
+  courier_id : String;
+  tracking_number : String;
 }
 
 export class UpdateOrderStatusDto {
   order_id: String;
   status: String;
+  status_remark:String;
 }
 
 export class UpdateTrackingDto {

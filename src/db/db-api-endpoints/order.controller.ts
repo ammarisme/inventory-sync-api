@@ -1,11 +1,56 @@
-import { Controller, Get, Post, Body, Put, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { AddTrackingStatus, CreateOrderDto, Order, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { randomBytes } from 'crypto';
 import { OrderService } from '../models/order/order.service';
+import * as fs from 'fs/promises'; // Using promises for cleaner syntax 
+
+
 
 
 @Controller('orders')
 export class OrderController {
   constructor(private readonly service: OrderService) {}
+
+  @Post("/import")
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/', // Change this to your desired upload directory
+        filename: (req, file, cb) => {
+          randomBytes(16, (err, buffer) => {
+            const randomFilename = buffer.toString('hex');
+            cb(err, `${randomFilename}_daraz.csv`); // Assuming the file is CSV
+          });
+        },
+      }),
+    })
+  )
+  async uploadOrders(@UploadedFile() file: Express.Multer.File, @Body() body: { source: string }) {
+    if (!file) {
+      return { message: 'No file uploaded' };
+    }
+    const { source } = body;
+    if (source !== 'daraz') {
+      return { message: 'Currently only Daraz imports are supported' };
+    }
+
+    const data = await fs.readFile(file.path, 'utf-8'); // Read file content
+    const orders = this.service.parseDarazCsvData(data); // Parse the data based on your specific format
+
+    orders.map((order) => {
+      try{
+        this.service.upsertOrderByOrderId(order.order_id as string, order);
+      }catch(error){
+        console.log(error)
+      }
+      
+    })
+    
+    return { message: 'Orders imported successfully' };
+  }
+
 
   @Post()
   async create(@Body() orderCreateDto: CreateOrderDto) {
@@ -28,6 +73,17 @@ export class OrderController {
   async updateStatus(@Body() dto: UpdateOrderStatusDto) {
     if((await this.service.findByOrderId(dto.order_id))){
       return this.service.updateOrderById(dto.order_id, dto.status);
+    }else{
+      return {
+        'error_message': 'object doesnt exist'
+      }
+    }
+  }
+
+  @Put("/update-status-with-remark")
+  async updateStatusWithRemark(@Body() dto: UpdateOrderStatusDto) {
+    if((await this.service.findByOrderId(dto.order_id))){
+      return this.service.updateOrderByIdWithRemark(dto.order_id, dto.status, dto.status_remark);
     }else{
       return {
         'error_message': 'object doesnt exist'
