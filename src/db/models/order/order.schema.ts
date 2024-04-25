@@ -173,6 +173,11 @@ export class Refund {
 }
 
 
+export class StatusHistory{
+  status:String;
+  status_remark : String;
+  updatedAt: Date;
+}
 
  export interface Order extends Document {
   order_id: String;
@@ -182,7 +187,7 @@ export class Refund {
   weight?: number;
   dimensions?: {};
   status: String;
-  status_history : [];
+  status_history : StatusHistory[];
   line_items: [];
   order_total: number;
   return_reason?: ReturnReason; // Reason code, remark
@@ -194,6 +199,13 @@ export class Refund {
   refunds?: Refund[]; // Array of Refund objects
   customer: Customer;
   tracking_status: AddTrackingStatus[];
+  createdAt: Date;
+}
+
+export interface OrderWithCustomFields extends Order {
+  time_in_status: number;
+  order_age: number;
+  order_total_display: string;
 }
 
 export const OrderSchema = new mongoose.Schema({
@@ -238,6 +250,7 @@ export class CreateOrderDto {
   customer: Customer;
   courier_id : String;
   tracking_number : String;
+  createdAt: Date;
 }
 
 export class UpdateOrderStatusDto {

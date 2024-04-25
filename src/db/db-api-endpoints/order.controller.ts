@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { AddTrackingStatus, CreateOrderDto, Order, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
+import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomBytes } from 'crypto';
@@ -110,5 +110,20 @@ export class OrderController {
   @Get("/by-status/:status")
   async findByStatus(@Param("status") status: string): Promise<Order[]> {
     return this.service.findOrdersByStatus(status);
+  }
+
+  @Get("/by-status-with-custom-fields/:status")
+  async findByStatusWithCustomFields(@Param("status") status: string): Promise<Order[]> {
+    return this.service.findByStatusWithCustomFields(status);
+  }
+
+  @Get("/count-by-status")
+  async countByStatus(): Promise<{ status: string, count: number }[]> {
+    return this.service.countOrdersByStatus();
+  }
+
+  @Get("/by-order-id/:order_id")
+  async findById(@Param("order_id") order_id: string): Promise<OrderWithCustomFields> {
+    return this.service.findByOrderIdWithCustomFields(order_id);
   }
 }

@@ -1,6 +1,6 @@
 import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses } from './order.schema';
+import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields } from './order.schema';
 
 @Injectable()
 export class OrderService {
@@ -10,9 +10,11 @@ export class OrderService {
   ) { }
 
   async create(createCatDto: CreateOrderDto): Promise<Order> {
+    createCatDto.createdAt = new Date();
     const createdCat = new this.model(createCatDto);
     return createdCat.save();
   }
+  
 
   async findAll(): Promise<Order[]> {
     return this.model.find().exec();
@@ -22,6 +24,60 @@ export class OrderService {
     return this.model.find({ status: status }).exec();
   }
 
+
+  async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
+    const orders = await this.model.find({ status: status }).exec();
+    const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
+        const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
+        let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
+        const currentTime = new Date();
+        const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime()); // Difference in milliseconds
+        const hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)); // Convert milliseconds to hours
+        const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+        
+        // Calculate order_age if createdAt is defined
+        const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+        const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null; // Difference in days
+
+        return { ...order.toObject(), time_in_status: hoursDifference, order_total_display: formattedOrderTotal,order_age: orderAge } as OrderWithCustomFields; // Cast to OrderWithCustomFields
+    }));
+    return ordersWithCustomFields;
+}
+
+async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFields | null> {
+  try {
+      // Find the order by its order_id
+      const order = await this.model.findOne({ order_id: orderId }).exec();
+
+      if (!order) {
+          // If the order is not found, return null
+          return null;
+      }
+
+      // Extract necessary information from the order
+      const lastStatusChange = order.status_history[order.status_history.length - 1];
+      const updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date();
+      const currentTime = new Date();
+      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime());
+      let hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60))??0;
+      hoursDifference = hoursDifference != null ? hoursDifference : 0;
+      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+      const createdAt = order.createdAt ? new Date(order.createdAt) : 0;
+      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+      // Construct and return the OrderWithCustomFields object
+      return {
+          ...order.toObject(),
+          time_in_status: hoursDifference,
+          order_total_display: formattedOrderTotal,
+          order_age: orderAge
+      } as OrderWithCustomFields;
+  } catch (error) {
+      // Handle any errors
+      console.error("Error retrieving order by order_id:", error);
+      return null;
+  }
+}
   async findById(id: String): Promise<Order | null> {
     return this.model.findById(id).exec();
   }
@@ -39,7 +95,8 @@ export class OrderService {
     // Define the status history object
     const statusHistoryObj = {
       status: status,
-      status_remark: status_remark
+      status_remark: status_remark,
+      updatedAt: new Date() // Set the updatedAt time
     };
   
     // Update the order document
@@ -180,5 +237,24 @@ export class OrderService {
 
     return parsedData;
   }
+
+  
+  async countOrdersByStatus(): Promise<{ status: string, count: number }[]> {
+    return this.model.aggregate([
+        {
+            $group: {
+                _id: "$status",
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                status: "$_id",
+                count: 1,
+                _id: 0
+            }
+        }
+    ]).exec();
+}
 
 }
