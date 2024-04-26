@@ -130,4 +130,9 @@ export class OrderController {
   async findById(@Param("order_id") order_id: string): Promise<OrderWithCustomFields> {
     return this.service.findByOrderIdWithCustomFields(order_id);
   }
+
+  @Get("/by-tracking-number/:tracking_number")
+  async findByTrackingNumber(@Param("tracking_number") tracking_number: string): Promise<OrderWithCustomFields> {
+    return this.service.findByTrackingNumberWithCustomFields(tracking_number);
+  }
 }

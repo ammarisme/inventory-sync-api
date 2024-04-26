@@ -58,6 +58,18 @@ export class JourneyController {
     }
   }
 
+  @Put(':journeyId/end-journey')
+  async endJourney(@Param('journeyId') journeyId: string) {
+    try {
+      const result = await this.journeyService.endJourney(journeyId);
+      return result;
+    } catch (error) {
+      console.error(error);
+      return { error: 'Failed to add orders to journey' };
+    }
+  }
+
+
   @Get(':journeyId')
   async getJourney(@Param('journeyId') journeyId: string) {
     try {

@@ -115,6 +115,41 @@ export class OrderService {
     return ordersWithCustomFields;
 }
 
+
+async findByTrackingNumberWithCustomFields(tracking_number: string): Promise<OrderWithCustomFields | null> {
+  try {
+      // Find the order by its order_id
+      const order = await this.model.findOne({ tracking_number : tracking_number }).populate("customer").exec();
+
+      if (!order) {
+          // If the order is not found, return null
+          return null;
+      }
+
+      // Extract necessary information from the order
+      const lastStatusChange = order.status_history[order.status_history.length - 1];
+      const updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date();
+      const currentTime = new Date();
+      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime());
+      let hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60))??0;
+      hoursDifference = hoursDifference != null ? hoursDifference : 0;
+      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+      const createdAt = order.createdAt ? new Date(order.createdAt) : 0;
+      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+      // Construct and return the OrderWithCustomFields object
+      return {
+          ...order.toObject(),
+          time_in_status: hoursDifference,
+          order_total_display: formattedOrderTotal,
+          order_age: orderAge
+      } as OrderWithCustomFields;
+  } catch (error) {
+      // Handle any errors
+      console.error("Error retrieving order by order_id:", error);
+      return null;
+  }
+}
 async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFields | null> {
   try {
       // Find the order by its order_id

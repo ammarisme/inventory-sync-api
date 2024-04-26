@@ -107,6 +107,25 @@ export class JourneyService {
       return false;
     }
   }
+
+  async endJourney(journeyId: string): Promise<boolean> {
+    try {
+      const currentDate = new Date();
+      
+      // Update journey status and timestamps
+      await this.model.updateOne({ _id: journeyId }, 
+        {
+          status: "completed",
+          endDate: currentDate,
+          updatedAt: currentDate,
+        }).exec();
+  
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+  }
   
   async getJourney(journeyId: string): Promise<Journey> {
     try {
@@ -133,7 +152,13 @@ export class JourneyService {
       const existingJourney = await this.model.findOne({
         rider: user._id,
         status: { $in: ['pending', 'ongoing'] },
-      }).populate('orders').exec();
+      }).populate({
+        path: 'orders',
+        populate: {
+          path: 'customer',
+          model: 'Customer' // Assuming the name of the Customer model is 'Customer'
+        }
+      }).exec();
     
       
   
