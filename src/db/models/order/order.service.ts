@@ -1,19 +1,51 @@
 import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields } from './order.schema';
+import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto } from './order.schema';
+import { CreateCustomerDto, Customer } from '../customer/customer.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
     @Inject('ORDER_MODEL')
     private model: Model<Order>,
+    @Inject('CUSTOMER_MODEL')
+    private customermodel: Model<Customer>,
   ) { }
 
   async create(createCatDto: CreateOrderDto): Promise<Order> {
+    // Set the createdAt field of the order
     createCatDto.createdAt = new Date();
-    const createdCat = new this.model(createCatDto);
-    return createdCat.save();
-  }
+
+    // Create the customer DTO
+    const newCustDto: CreateCustomerDto = {
+        customer_id: createCatDto.customer.phone,
+        first_name: createCatDto.customer.first_name,
+        last_name: createCatDto.customer.last_name,
+        phone: createCatDto.customer.phone,
+        email: createCatDto.customer.email,
+        address1: createCatDto.customer.address1,
+        address2: createCatDto.customer.address2,
+        state: createCatDto.customer.state,
+        city: createCatDto.customer.city,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+
+    // Create the customer using the customer service
+    const createdCustomer = await this.customermodel.create(newCustDto);
+
+    // Create the order using the provided DTO
+    const createdCat = new this.model({
+        ...createCatDto,
+        createdAt: new Date(),
+        customer: createdCustomer._id // Link customer to order
+    });
+    await createdCat.save();
+
+    // Return the created order
+    return createdCat;
+}
+
   
 
   async findAll(): Promise<Order[]> {
@@ -21,12 +53,51 @@ export class OrderService {
   }
 
   async findOrdersByStatus(status: String): Promise<Order[]> {
-    return this.model.find({ status: status }).exec();
+    return this.model.find({ status: status }).populate('customer').exec();
   }
+
+  // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
+  //   try {
+  //     // Find all orders
+  //     const orders = await this.model.find().exec();
+  
+  //     // Iterate through each order
+  //     for (const order of orders) {
+  //       const { customer: orderCustomer } = order;
+  
+  //       // Check if the order has a customer object
+  //       if (orderCustomer && orderCustomer.phone) {
+          
+
+  //         const newcus = new CreateCustomerDto()
+  //         newcus.customer_id = orderCustomer.phone;
+  //         newcus.state = "active";
+  //         newcus.address1 = orderCustomer.address1??"";
+  //         newcus.customer_id = orderCustomer.phone??"";
+  //         newcus.first_name = orderCustomer.first_name??"";
+  //         newcus.last_name = orderCustomer.last_name??"";
+  //         newcus.phone = orderCustomer.phone??"";
+  //         newcus.email = orderCustomer.email??"";
+  //         newcus.state = orderCustomer.state??"";
+  //         newcus.createdAt = new Date();
+  //         newcus.updatedAt = new Date();
+  //         const newCustomer = await this.customermodel.create(newcus);
+
+  //         // Update the order's customer field with the newly created customer's ID
+  //         await this.model.findByIdAndUpdate(order._id, { customer_info: newCustomer._id }).exec();
+  //       }
+  //     }
+  //     console.log('Customer migration completed successfully');
+  //   } catch (error) {
+  //     console.error('Error migrating customers:', error);
+  //     throw error;
+  //   }
+  // }
+  
 
 
   async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
-    const orders = await this.model.find({ status: status }).exec();
+    const orders = await this.model.find({ status: status }).populate("customer").exec();
     const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
         const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
         let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
@@ -47,7 +118,7 @@ export class OrderService {
 async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFields | null> {
   try {
       // Find the order by its order_id
-      const order = await this.model.findOne({ order_id: orderId }).exec();
+      const order = await this.model.findOne({ order_id: orderId }).populate("customer").exec();
 
       if (!order) {
           // If the order is not found, return null
@@ -140,7 +211,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
     }
   }
 
-  async upsertOrderByOrderId(orderId: string, createOrderDto: CreateOrderDto): Promise<boolean> {
+  async upsertOrderByOrderId(orderId: string, createOrderDto: ParseOrderDto): Promise<boolean> {
     try {
       const update: UpdateQuery<Order> = {
         $set: createOrderDto // Set the entire document with the provided CreateOrderDto
@@ -159,14 +230,14 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
   }
 
 
-  parseDarazCsvData(data: string): CreateOrderDto[] {
+  parseDarazCsvData(data: string): ParseOrderDto[] {
     const lines = data.split('\n'); // Split data into lines
 
     // Extract header row (assuming the first line is the header)
     const headers = lines[0].split(';');
 
     // Create an empty result array to store parsed data
-    const parsedData: CreateOrderDto[] = [];
+    const parsedData: ParseOrderDto[] = [];
 
     // Loop through remaining lines (data lines)
     for (let i = 1; i < lines.length; i++) {
@@ -197,7 +268,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         // Recalculate order total
       } else {
         // If order doesn't exist, create a new order object
-        const order = new CreateOrderDto();
+        const order = new ParseOrderDto();
         order.order_id = lineItem['Order Number'];
         order.invoice_number = "DRZ" + lineItem['Order Number'];
         order.customer = {
@@ -210,7 +281,9 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
           phone: lineItem["Billing Phone Number"],
           email: lineItem["Customer Email"],
           state: lineItem["Billing Address3"],
+          
           // Add other customer details if available
+
 
         };
         order.selected_payment_method = {method:  lineItem["Payment Method"]}; // Set payment method

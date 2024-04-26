@@ -9,10 +9,12 @@ import { UsersController } from '../db-api-endpoints/user.controller';
 import { UserService } from '../models/user/user.service';
 import { JourneyService } from '../models/journey/journey.service';
 import { JourneyController } from '../db-api-endpoints/journey.controller';
+import { CustomerService } from '../models/customer/customer.service';
+import { CustomersController } from '../db-api-endpoints/customer.controller';
 
 @Module({
   imports: [DatabaseModule],
-  providers: [OrderService, CatService, UserService, JourneyService, ...mongoProviders],
-  controllers: [CatsController, OrderController, UsersController, JourneyController]
+  providers: [OrderService, CatService, UserService, JourneyService, CustomerService, ...mongoProviders],
+  controllers: [CatsController, OrderController, UsersController, JourneyController, CustomersController]
 })
 export class MongoModule {}

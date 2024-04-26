@@ -6,9 +6,6 @@ import { randomBytes } from 'crypto';
 import { OrderService } from '../models/order/order.service';
 import * as fs from 'fs/promises'; // Using promises for cleaner syntax 
 
-
-
-
 @Controller('orders')
 export class OrderController {
   constructor(private readonly service: OrderService) {}
@@ -55,10 +52,10 @@ export class OrderController {
   @Post()
   async create(@Body() orderCreateDto: CreateOrderDto) {
     if(!(await this.service.findByOrderId(orderCreateDto.order_id))){
-      return this.service.create(orderCreateDto);
+      this.service.create(orderCreateDto);
     }else{
       return {
-        'error_message': 'object exists'
+        'error_message': 'object exists - ' + orderCreateDto.order_id
       }
     }
   }
@@ -106,6 +103,13 @@ export class OrderController {
   async findAll(): Promise<Order[]> {
     return this.service.findAll();
   }
+
+  
+  
+  // @Get("generate-customers")
+  // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
+  //    return this.service.migrateCustomersFromOrdersToCustomersCollection();
+  // }
 
   @Get("/by-status/:status")
   async findByStatus(@Param("status") status: string): Promise<Order[]> {

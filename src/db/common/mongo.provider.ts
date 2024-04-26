@@ -3,6 +3,7 @@ import { CatSchema } from '../models/cat/cat.schema';
 import { OrderSchema } from '../models/order/order.schema';
 import { UserSchema } from '../models/user/user.schema';
 import { JourneySchema } from '../models/journey/journey.schema';
+import { CustomerSchema } from '../models/customer/customer.schema';
 
 export const mongoProviders = [
   {
@@ -23,6 +24,11 @@ export const mongoProviders = [
   {
     provide: 'JOURNEY_MODEL',
     useFactory: (connection: Connection) => connection.model('Journey', JourneySchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  {
+    provide: 'CUSTOMER_MODEL',
+    useFactory: (connection: Connection) => connection.model('Customer', CustomerSchema),
     inject: ['DATABASE_CONNECTION'],
   },
 ];

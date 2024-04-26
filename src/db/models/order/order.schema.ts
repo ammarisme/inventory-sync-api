@@ -1,6 +1,8 @@
-import { Document } from 'mongoose';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory  } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
+import { Customer } from '../customer/customer.schema';
+
 
 
 export enum OrderStatuses {
@@ -31,28 +33,6 @@ export enum OrderStatuses {
   return_in_progress = 	'return_in_progress',
   return_completed = 	'return_completed',
   refunded = 	'refunded'  // Add other order statuses as needed
-}
-
-
-// CustomerLocation Object (Represents customer location details)
-@Schema()
-export class Customer {
-  @Prop({ required: false })
-  id: string; // Customer location ID
-
-  @Prop({ required: false })
-  latitude?: number; // Optional latitude
-
-  @Prop({ required: false })
-  longitude?: number; // Optional longitude
-
-  first_name : string;
-  last_name : string;
-  phone : string;
-  email : string;
-  address1 : string;
-  address2 : string;
-  state : string;
 }
 
 // File Object (Represents a file linked to an order note)
@@ -197,7 +177,7 @@ export class StatusHistory{
   selected_payment_method?: SelectedPaymentMethod; // Selected payment method object
   payments?: Payment[]; // Array of Payment objects
   refunds?: Refund[]; // Array of Refund objects
-  customer: Customer;
+  customer : Types.ObjectId
   tracking_status: AddTrackingStatus[];
   createdAt: Date;
 }
@@ -223,8 +203,12 @@ export const OrderSchema = new mongoose.Schema({
   selected_payment_method: {},
   payments: [],
   refunds: [], // Array of Refund objects
-  customer: {},
   tracking_number : String,
+  customer: {
+    type: Types.ObjectId,
+    ref: 'Customer', // Reference to the User model for the rider
+    required: true,
+  },
   courier_id : String,
   tracking_status: [],
 });
@@ -248,6 +232,28 @@ export class CreateOrderDto {
   payments: []; // Array of Payment objects
   refunds: []; // Array of Refund objects
   customer: Customer;
+  courier_id : String;
+  tracking_number : String;
+  createdAt: Date;
+}
+
+export class ParseOrderDto {
+  order_id: String;
+  invoice_number: String;
+  weight: Number;
+  dimensions: {};
+  status: String;
+  status_history : [];
+  line_items: LineItem[];
+  order_total: Number;
+  return_reason: {};
+  tracking_status: AddTrackingStatus[];
+  shipping_fee: Number;
+  cod_fee: Number;
+  selected_payment_method: {};
+  payments: []; // Array of Payment objects
+  refunds: []; // Array of Refund objects
+  customer: {};
   courier_id : String;
   tracking_number : String;
   createdAt: Date;
