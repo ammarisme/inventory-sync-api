@@ -78,7 +78,7 @@ export class JourneyService {
     }
     }
     
-  async startJourney(journeyId: string): Promise<boolean> {
+  async startJourney(journeyId: string): Promise<Journey> {
     try {
       const currentDate = new Date();
       
@@ -92,19 +92,73 @@ export class JourneyService {
         }).exec();
   
       // Retrieve orders associated with the journey
-      const journey = await this.model.findById(journeyId).populate('orders').exec();
+      const journey = await this.model.findById(journeyId).exec();
       if (!journey) {
         throw new Error(`Journey with ID ${journeyId} not found`);
       }
   
       // Update status of each order to "shipped"
       const orderIds = journey.orders.map(order => order._id);
+      if(!orderIds || orderIds.length == 0){
+        throw new Error(`Journey with ID ${journeyId} doesn't have orders assigned it it.`);
+      }
+      
       await this.orderModel.updateMany({ _id: { $in: orderIds } }, { status: "shipped" }).exec();
   
-      return true;
+      const journey_updated = await this.model.findById(journeyId).populate({
+        path: 'orders',
+        populate: {
+          path: 'customer',
+          model: 'Customer' // Assuming the name of the Customer model is 'Customer'
+        }
+      }).exec();
+
+      return journey_updated;
     } catch (error) {
       console.error(error);
-      return false;
+      return null;
+    }
+  }
+
+  async pauseJourney(journeyId: string): Promise<Journey> {
+    try {
+      const currentDate = new Date();
+      
+      // Update journey status and timestamps
+      await this.model.updateOne({ _id: journeyId }, 
+        {
+          status: "pending",
+          startDate: currentDate,
+          createdAt: currentDate,
+          updatedAt: currentDate,
+        }).exec();
+  
+      // Retrieve orders associated with the journey
+      const journey = await this.model.findById(journeyId).exec();
+      if (!journey) {
+        throw new Error(`Journey with ID ${journeyId} not found`);
+      }
+  
+      // Update status of each order to "shipped"
+      const orderIds = journey.orders.map(order => order._id);
+      if(!orderIds || orderIds.length == 0){
+        throw new Error(`Journey with ID ${journeyId} doesn't have orders assigned it it.`);
+      }
+      
+      await this.orderModel.updateMany({ _id: { $in: orderIds } }, { status: "shipping_scheduled" }).exec();
+  
+      const journey_updated = await this.model.findById(journeyId).populate({
+        path: 'orders',
+        populate: {
+          path: 'customer',
+          model: 'Customer' // Assuming the name of the Customer model is 'Customer'
+        }
+      }).exec();
+
+      return journey_updated;
+    } catch (error) {
+      console.error(error);
+      return null;
     }
   }
 
@@ -146,7 +200,8 @@ export class JourneyService {
   async getOrCreateJourneyByRider(riderId: string): Promise<Journey> {
     try {
       const user = await this.userModel.findOne({
-        id: riderId},
+        id: riderId
+      },
       );
       // Check if there is a pending or ongoing journey for the rider
       const existingJourney = await this.model.findOne({

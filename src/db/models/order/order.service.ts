@@ -1,6 +1,6 @@
 import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto } from './order.schema';
+import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue } from './order.schema';
 import { CreateCustomerDto, Customer } from '../customer/customer.schema';
 
 @Injectable()
@@ -12,21 +12,22 @@ export class OrderService {
     private customermodel: Model<Customer>,
   ) { }
 
-  async create(createCatDto: CreateOrderDto): Promise<Order> {
+  async create(createOrdeDto: CreateOrderDto): Promise<Order> {
     // Set the createdAt field of the order
-    createCatDto.createdAt = new Date();
-
+    createOrdeDto.createdAt = new Date();
+    createOrdeDto.revenues = []
+    createOrdeDto.costs = []
     // Create the customer DTO
     const newCustDto: CreateCustomerDto = {
-        customer_id: createCatDto.customer.phone,
-        first_name: createCatDto.customer.first_name,
-        last_name: createCatDto.customer.last_name,
-        phone: createCatDto.customer.phone,
-        email: createCatDto.customer.email,
-        address1: createCatDto.customer.address1,
-        address2: createCatDto.customer.address2,
-        state: createCatDto.customer.state,
-        city: createCatDto.customer.city,
+        customer_id: createOrdeDto.customer.phone,
+        first_name: createOrdeDto.customer.first_name,
+        last_name: createOrdeDto.customer.last_name,
+        phone: createOrdeDto.customer.phone,
+        email: createOrdeDto.customer.email,
+        address1: createOrdeDto.customer.address1,
+        address2: createOrdeDto.customer.address2,
+        state: createOrdeDto.customer.state,
+        city: createOrdeDto.customer.city,
         createdAt: new Date(),
         updatedAt: new Date(),
     };
@@ -34,9 +35,13 @@ export class OrderService {
     // Create the customer using the customer service
     const createdCustomer = await this.customermodel.create(newCustDto);
 
+
+    createOrdeDto.revenues = getAllRevenues(createOrdeDto);
+    createOrdeDto.costs = getAllCosts(createOrdeDto);
+
     // Create the order using the provided DTO
     const createdCat = new this.model({
-        ...createCatDto,
+        ...createOrdeDto,
         createdAt: new Date(),
         customer: createdCustomer._id // Link customer to order
     });
@@ -55,6 +60,7 @@ export class OrderService {
   async findOrdersByStatus(status: String): Promise<Order[]> {
     return this.model.find({ status: status }).populate('customer').exec();
   }
+
 
   // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
   //   try {
@@ -94,8 +100,6 @@ export class OrderService {
   //   }
   // }
   
-
-
   async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
     const orders = await this.model.find({ status: status }).populate("customer").exec();
     const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
@@ -171,12 +175,33 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
       const createdAt = order.createdAt ? new Date(order.createdAt) : 0;
       const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
+            // Calculate total revenue
+    // Calculate total revenue
+    const totalRevenueNum = order.revenues.reduce((acc, revenue) => acc + convertToNumber(revenue.amount), 0);
+
+    // Calculate total costs
+    const totalCostsNum = order.costs.reduce((acc, cost) => acc + convertToNumber(cost.amount), 0);
+
+    // Convert the amount to a number if it's a string
+    function convertToNumber(amount: number | string): number {
+      return typeof amount === 'string' ? parseFloat(amount) : amount;
+    }
+
+    // Calculate profit
+    const profit = (totalRevenueNum - totalCostsNum);
+
+    // Calculate profit percentage (rounded to two decimals) and add % sign
+    const profitPercentage = Math.round((profit / totalCostsNum) * 100);
       // Construct and return the OrderWithCustomFields object
       return {
           ...order.toObject(),
           time_in_status: hoursDifference,
           order_total_display: formattedOrderTotal,
-          order_age: orderAge
+          order_age: orderAge,
+          total_revenue: totalRevenueNum.toLocaleString(),
+          total_costs: totalCostsNum.toLocaleString(),
+          profit: profit.toLocaleString(),
+          profit_percentage: profitPercentage.toLocaleString() + '%'
       } as OrderWithCustomFields;
   } catch (error) {
       // Handle any errors
@@ -365,4 +390,86 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
     ]).exec();
 }
 
+}
+
+function getAllRevenues(createOrdeDto: CreateOrderDto): Revenue[] {
+    let revenues = []
+
+    // add all revenues
+    const order_sum = new Revenue()
+    order_sum.amount = createOrdeDto.order_total as number;
+    order_sum.type = "order_sum"
+    order_sum.description = "Order Sum"
+    order_sum.status = "not-received"
+    revenues.push(order_sum)
+
+    const shipping_charges = new Revenue()
+    shipping_charges.amount = createOrdeDto.shipping_fee as number;
+    shipping_charges.type = "shippnng_fee"
+    shipping_charges.description = "Shipping Charges"
+    shipping_charges.status = "not-received"
+    revenues.push(shipping_charges)
+
+    return revenues;
+}
+
+
+function getAllCosts(createOrdeDto: CreateOrderDto): Cost[] {
+  let costs = []
+
+  
+    //add costs and revenue lines to the object.
+    switch(createOrdeDto.selected_payment_method["method"]){
+      case "cod":
+        const cod_cost = new Cost()
+        cod_cost.type = "cod_fee"
+        cod_cost.amount = 0;
+        cod_cost.status = "not-settled";
+        cod_cost.description = "COD Collection fee";
+        costs.push(cod_cost)
+        break;
+      case "bacs":
+        break;
+      case "webxpay":
+        const cost_webxpay = new Cost()
+        cost_webxpay.type = "webxpay_fee"
+        cost_webxpay.amount = createOrdeDto.order_total as number * 0.018;
+        cost_webxpay.status = "not-settled";
+        cost_webxpay.description = "Card processing fee";
+        costs.push(cost_webxpay);
+        break;
+    }
+
+    //paid shipping fee
+    const paid_shipping_fee = new Cost()
+    paid_shipping_fee.amount = createOrdeDto.shipping_fee as number;
+    paid_shipping_fee.type = "shipping_fee"
+    paid_shipping_fee.status = "not-settled"
+    paid_shipping_fee.description = "Shipping fee"
+    costs.push(paid_shipping_fee)
+
+    //add all costs
+    const cost_goods = new Cost()
+    cost_goods.amount = 0;//to be added later.
+    cost_goods.type = "goods"
+    cost_goods.status = "settled"
+    cost_goods.description = "Goods purchase"
+    costs.push(cost_goods)
+
+    const packaging = new Cost()
+    packaging.amount = 0;//to be added later.
+    packaging.type = "packaging-materials"
+    packaging.status = "settled"
+    packaging.description = "Packaging Materials"
+    costs.push(packaging)
+
+    const warehousing = new Cost()
+    warehousing.amount = 0;//to be added later.
+    warehousing.type = "warehousing"
+    warehousing.status = "settled"
+    warehousing.description = "Warehousing"
+    costs.push(warehousing)
+
+    return costs;
+  
 }

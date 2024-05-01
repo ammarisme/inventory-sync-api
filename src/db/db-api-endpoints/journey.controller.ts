@@ -58,6 +58,17 @@ export class JourneyController {
     }
   }
 
+  @Put(':journeyId/pause-journey')
+  async pauseJourney(@Param('journeyId') journeyId: string) {
+    try {
+      const result = await this.journeyService.pauseJourney(journeyId);
+      return result;
+    } catch (error) {
+      console.error(error);
+      return { error: 'Failed to add orders to journey' };
+    }
+  }
+
   @Put(':journeyId/end-journey')
   async endJourney(@Param('journeyId') journeyId: string) {
     try {

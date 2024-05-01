@@ -111,4 +111,14 @@ export class InvoiceController {
       utils.log(error)
     }
   }
+
+  @Get("/by-invoice_number/:invoice_number")
+  async byInvoiceNumber(@Param('invoice_number') invoice_number: string) {
+    try {
+      const result = await mongo.getFirstDocument("invoices",{"invoice_number":invoice_number});
+      return result
+    } catch (error) {
+      utils.log(error)
+    }
+  }
 }

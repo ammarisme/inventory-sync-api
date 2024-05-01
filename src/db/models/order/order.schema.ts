@@ -142,6 +142,23 @@ export class Payment {
   amount?: number; // Payment amount
 }
 
+export class Revenue {
+  type: string; // Payment method ID
+  description: string; // Payment method ID
+  attrbutes?: string[]; // Payment method ID
+  amount: number; // Payment amount
+  status:string;//receieved,pending,denied
+}
+export class Cost {
+  type: string; // Payment method ID
+  description: string; // Payment method ID
+  attrbutes?: string[]; // Payment method ID
+  amount: number; // Payment amount
+  status:string;//settled,pending,denied
+}
+
+
+
 // Refund Object
 @Schema()
 export class Refund {
@@ -176,6 +193,8 @@ export class StatusHistory{
   cod_fee?: number;
   selected_payment_method?: SelectedPaymentMethod; // Selected payment method object
   payments?: Payment[]; // Array of Payment objects
+  revenues?: Revenue[]; // Array of Payment objects
+  costs?: Cost[]; // Array of Payment objects
   refunds?: Refund[]; // Array of Refund objects
   customer : Types.ObjectId
   tracking_status: AddTrackingStatus[];
@@ -186,6 +205,10 @@ export interface OrderWithCustomFields extends Order {
   time_in_status: number;
   order_age: number;
   order_total_display: string;
+  total_revenue: string,
+  total_costs: string,
+  profit: string,
+  profit_percentage: string
 }
 
 export const OrderSchema = new mongoose.Schema({
@@ -202,6 +225,8 @@ export const OrderSchema = new mongoose.Schema({
   cod_fee: Number,
   selected_payment_method: {},
   payments: [],
+  revenues: [], // Array of Payment objects
+  costs: [], // Array of Payment objects
   refunds: [], // Array of Refund objects
   tracking_number : String,
   customer: {
@@ -230,6 +255,8 @@ export class CreateOrderDto {
   cod_fee: Number;
   selected_payment_method: {};
   payments: []; // Array of Payment objects
+  revenues?: Revenue[]; // Array of Payment objects
+  costs?: Cost[]; // Array of Payment objects
   refunds: []; // Array of Refund objects
   customer: Customer;
   courier_id : String;
@@ -252,6 +279,8 @@ export class ParseOrderDto {
   cod_fee: Number;
   selected_payment_method: {};
   payments: []; // Array of Payment objects
+  revenues?: Revenue[]; // Array of Payment objects
+  costs?: Cost[]; // Array of Payment objects
   refunds: []; // Array of Refund objects
   customer: {};
   courier_id : String;

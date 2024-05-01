@@ -116,6 +116,10 @@ export class OrderController {
     return this.service.findOrdersByStatus(status);
   }
 
+ 
+
+  // orders/
+
   @Get("/by-status-with-custom-fields/:status")
   async findByStatusWithCustomFields(@Param("status") status: string): Promise<Order[]> {
     return this.service.findByStatusWithCustomFields(status);
