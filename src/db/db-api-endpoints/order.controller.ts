@@ -139,4 +139,15 @@ export class OrderController {
   async findByTrackingNumber(@Param("tracking_number") tracking_number: string): Promise<OrderWithCustomFields> {
     return this.service.findByTrackingNumberWithCustomFields(tracking_number);
   }
+
+  @Post('update-orders-status/:status')
+  async addOrdersToJourney(@Param('status') status: string, @Body() data) {
+    try {
+      const result = await this.service.updateOrdersStatus(status, data.orderIds);
+      return result;
+    } catch (error) {
+      console.error(error);
+      return { error: 'Failed to add orders to journey' };
+    }
+  }
 }
