@@ -73,6 +73,19 @@ export class OrderService {
       return {"error" : error};
     }
     }
+
+    async shipOrders(courier: string, orderIds: string[]): Promise<Object> {
+      try {  
+         // Update order statuses to "allocated"
+         await Promise.all(orderIds.map(order_id =>
+          this.model.updateOne({ order_id: order_id }, { courier_id:courier, status: "shipped" }).exec()
+        ));
+    
+      } catch (error) {
+        console.error(error);
+        return {"error" : error};
+      }
+      }
   // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
   //   try {
   //     // Find all orders

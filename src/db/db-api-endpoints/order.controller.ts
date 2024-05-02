@@ -150,4 +150,27 @@ export class OrderController {
       return { error: 'Failed to add orders to journey' };
     }
   }
+
+  @Post('/ship-orders')
+  async shipOrders(@Body() data) {
+    try {
+      // Validate incoming data
+      if (!data || !data.courier || !data.orderIds || !Array.isArray(data.orderIds)) {
+        throw new Error('Invalid data provided');
+      }
+  
+      // Call the service to ship orders
+      const result = await this.service.shipOrders(data.courier, data.orderIds);
+  
+      // Return successful result
+      return { success: true, result };
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Error in shipping orders:', error);
+  
+      // Return an error response
+      return { error: 'Failed to ship orders' };
+    }
+  }
+  
 }
