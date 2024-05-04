@@ -5,6 +5,7 @@ import { diskStorage } from 'multer';
 import { randomBytes } from 'crypto';
 import { OrderService } from '../models/order/order.service';
 import * as fs from 'fs/promises'; // Using promises for cleaner syntax 
+import { error } from 'console';
 
 @Controller('orders')
 export class OrderController {
@@ -36,16 +37,41 @@ export class OrderController {
     const data = await fs.readFile(file.path, 'utf-8'); // Read file content
     const orders = this.service.parseDarazCsvData(data); // Parse the data based on your specific format
 
-    orders.map((order) => {
+    var errors = []
+    for(const order of orders){
       try{
-        this.service.upsertOrderByOrderId(order.order_id as string, order);
+        if(!(await this.service.findByOrderId(order.order_id))){
+          if(order.customer.phone== ""){
+            errors.push(
+              {
+                "order_id" : order.order_id,
+                'error_message': 'phone number required'
+              }
+            )
+            continue;
+          }
+          this.service.create(order);
+        }else{
+          errors.push(
+            {
+              "order_id" : order.order_id,
+              'error_message': 'object exists - ' + order.order_id
+            }
+          ) 
+        }
+        //await this.service.upsertOrderByOrderId(order.order_id as string, order);
       }catch(error){
-        console.log(error)
+        errors.push(
+          {
+            "order_id" : order.order_id,
+            'error_message': error
+          }
+        )
       }
-      
-    })
+    }
     
-    return { message: 'Orders imported successfully' };
+    return { message: errors
+     };
   }
 
 

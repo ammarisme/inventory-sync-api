@@ -314,14 +314,14 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
   }
 
 
-  parseDarazCsvData(data: string): ParseOrderDto[] {
+  parseDarazCsvData(data: string): CreateOrderDto[] {
     const lines = data.split('\n'); // Split data into lines
 
     // Extract header row (assuming the first line is the header)
     const headers = lines[0].split(';');
 
     // Create an empty result array to store parsed data
-    const parsedData: ParseOrderDto[] = [];
+    const parsedData: CreateOrderDto[] = [];
 
     // Loop through remaining lines (data lines)
     for (let i = 1; i < lines.length; i++) {
@@ -352,27 +352,28 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         // Recalculate order total
       } else {
         // If order doesn't exist, create a new order object
-        const order = new ParseOrderDto();
+        const order = new CreateOrderDto();
         order.order_id = lineItem['Order Number'];
         order.invoice_number = "DRZ" + lineItem['Order Number'];
-        order.customer = {
+        order.customer = 
+        {
           // Set customer information here
-          id: lineItem["Customer Email"],
+          customer_id: lineItem["Customer Email"],
           first_name: lineItem["Customer Name"], // Assuming customer name is provided in CSV
           last_name : "",
           address1: lineItem["Billing Address"],
           address2: "",
+          city: "",
+          createdAt: new Date(),
+          updatedAt: new Date(),
           phone: lineItem["Billing Phone Number"],
           email: lineItem["Customer Email"],
           state: lineItem["Billing Address3"],
-          
           // Add other customer details if available
-
-
-        };
+        } as Customer;
         order.selected_payment_method = {method:  lineItem["Payment Method"]}; // Set payment method
         order.courier_id = "daraz"; // Set courier
-        order.tracking_number = lineItem['Order Number']; // Use order number as tracking number
+        order.tracking_number = lineItem['Tracking Code']; // Use order number as tracking number
         // Set other order properties accordingly
         order.line_items = [
           new LineItem(
