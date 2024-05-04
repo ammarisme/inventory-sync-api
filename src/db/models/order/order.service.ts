@@ -323,6 +323,13 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
     // Create an empty result array to store parsed data
     const parsedData: CreateOrderDto[] = [];
 
+      // Define the status history object
+      const statusHistoryObj = {
+        status: OrderStatuses.order_confirmed,
+        status_remark: "",
+        updatedAt: new Date() // Set the updatedAt time
+      } as never;
+    
     // Loop through remaining lines (data lines)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
@@ -389,6 +396,8 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         // Calculate order total
         order.order_total = order.line_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
         order.status = OrderStatuses.order_confirmed;
+        order.status_history = [];
+        order.status_history.push(statusHistoryObj)
         parsedData.push(order);
       }
     }
