@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
 import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -90,6 +90,21 @@ export class OrderController {
     // You may want to add validation logic here if needed
     return this.service.addTrackingStatus(dto.order_id, dto);
   }
+
+   // Controller function to search orders based on parameters
+   @Get("/search")
+   async searchOrders(
+     @Query('customer_city') customerCity: string,
+     @Query('customer_state') customerState: string,
+     @Query('courier_id') courierId: string,
+     @Query('source') source: string,
+     @Query('order_status') order_status: string,
+     @Query('search_text') search_text: string,
+   ): Promise<Order[]> {
+
+     // Call the service method to search orders based on the provided parameters
+     return this.service.search(customerCity, customerState, courierId, source, order_status,search_text);
+   }
 
 
   @Put("/update-status")

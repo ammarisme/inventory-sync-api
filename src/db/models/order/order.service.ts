@@ -379,7 +379,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
           // Add other customer details if available
         } as Customer;
         order.selected_payment_method = {method:  lineItem["Payment Method"]}; // Set payment method
-        order.courier_id = "daraz"; // Set courier
+        order.courier_id = "lk-dex"; // Set courier
         order.tracking_number = lineItem['Tracking Code']; // Use order number as tracking number
         // Set other order properties accordingly
         order.line_items = [
@@ -404,6 +404,58 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
 
     return parsedData;
   }
+
+  async search(
+    customerCity: string | null,
+    customerState: string | null,
+    courierId: string | null,
+    source: string | null,
+    order_status: string | null,
+    searchText: string
+): Promise<Order[]> {
+    const query: any = {};
+
+    if (source) {
+        query['source'] = source;
+    }
+
+    if (order_status) {
+      query['status'] = order_status;
+    }
+
+    if (courierId) {
+        query['courier_id'] = courierId;
+    }
+
+    if (searchText && searchText.trim() !== '') {
+        query['invoice_number'] = { $regex: searchText, $options: 'i' };
+    }
+
+    if (searchText && searchText.trim() !== '') {
+      // Include searchText in the query for invoice_number, courier_id, or source
+      query.$and = [
+          { 'invoice_number': { $regex: searchText, $options: 'i' } },
+      ];
+  }
+
+    // Execute the MongoDB query and populate the 'customer' field
+    const orders = await this.model.find(query).populate('customer').exec();
+
+    // Filter orders based on customer city and state
+    const filteredOrders = orders.filter((order) =>  {
+      const customer = order.customer as unknown as Customer;
+        if (customerCity  && customer.city !== customerCity) {
+            return false;
+        }
+        if (customerState  && customer.state !== customerState) {
+            return false;
+        }
+        return true;
+    });
+
+    return filteredOrders;
+}
+
 
   
   async countOrdersByStatus(): Promise<{ status: string, count: number }[]> {
