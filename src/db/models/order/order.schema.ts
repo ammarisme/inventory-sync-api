@@ -199,6 +199,7 @@ export class StatusHistory{
   customer : Types.ObjectId
   tracking_status: AddTrackingStatus[];
   createdAt: Date;
+  source:String;
 }
 
 export interface OrderWithCustomFields extends Order {
@@ -236,6 +237,7 @@ export const OrderSchema = new mongoose.Schema({
   },
   courier_id : String,
   tracking_status: [],
+  source:String
 });
 
 mongoose.model('orders', OrderSchema  );
@@ -262,6 +264,7 @@ export class CreateOrderDto {
   courier_id : String;
   tracking_number : String;
   createdAt: Date;
+  source: string;
 }
 
 export class ParseOrderDto {
@@ -286,6 +289,7 @@ export class ParseOrderDto {
   courier_id : String;
   tracking_number : String;
   createdAt: Date;
+  source:String;
 }
 
 export class UpdateOrderStatusDto {

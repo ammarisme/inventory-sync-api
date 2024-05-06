@@ -17,10 +17,12 @@ import { CityService } from '../models/cities/cities.service';
 import { CityController } from '../db-api-endpoints/cities.controller.';
 import { StateService } from '../models/state/state.service';
 import { StateController } from '../db-api-endpoints/state.controller';
+import { OrderSourceService } from '../models/order_source/order-source.service';
 
 @Module({
   imports: [DatabaseModule],
-  providers: [OrderService, CatService, UserService, JourneyService, CustomerService, CourierService, CityService, StateService, ...mongoProviders],
+  providers: [OrderService, CatService, UserService, JourneyService, CustomerService,
+     CourierService, CityService, StateService, OrderSourceService, ...mongoProviders],
   controllers: [CatsController, OrderController, UsersController, JourneyController, CustomersController, CourierController, CityController, StateController]
 })
 export class MongoModule {}

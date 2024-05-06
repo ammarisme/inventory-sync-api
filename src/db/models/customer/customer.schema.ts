@@ -94,6 +94,8 @@ export class CreateCustomerDto{
   address2?: string;
   city?: string;
   state: string;
+  courier_id?: string;
+  source: string;
   createdAt: Date;
   updatedAt: Date;
 }

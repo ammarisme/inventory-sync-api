@@ -2,6 +2,8 @@ import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
 import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue } from './order.schema';
 import { CreateCustomerDto, Customer } from '../customer/customer.schema';
+import { City } from '../cities/cities.schema';
+import { State } from '../state/state.schema';
 
 @Injectable()
 export class OrderService {
@@ -10,6 +12,10 @@ export class OrderService {
     private model: Model<Order>,
     @Inject('CUSTOMER_MODEL')
     private customermodel: Model<Customer>,
+    @Inject('CITY_MODEL')
+    private cityModel: Model<City>,
+    @Inject('STATE_MODEL')
+    private stateModel: Model<State>,
   ) { }
 
   async create(createOrdeDto: CreateOrderDto): Promise<Order> {
@@ -30,7 +36,37 @@ export class OrderService {
         city: createOrdeDto.customer.city,
         createdAt: new Date(),
         updatedAt: new Date(),
+        source: createOrdeDto.source
     };
+
+    if(newCustDto.city){
+
+      const existing_city = await this.cityModel.findOne({id : newCustDto.city})
+      if(!existing_city){
+        const newCity = new this.cityModel({
+          id: newCustDto.city,
+          name: newCustDto.city,
+          country : "sri lanka"
+        })
+        await newCity.save();
+      }
+      
+    }
+
+    if(newCustDto.state){
+
+      const existing_state = await this.stateModel.findOne({id : newCustDto.state})
+      if(!existing_state){
+        const newState = new this.stateModel({
+          id: newCustDto.state,
+          name: newCustDto.state,
+          country : "sri lanka"
+        })
+        await newState.save();
+      }
+      
+    }
+    
 
     // Create the customer using the customer service
     const createdCustomer = await this.customermodel.create(newCustDto);
@@ -361,6 +397,8 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         // If order doesn't exist, create a new order object
         const order = new CreateOrderDto();
         order.order_id = lineItem['Order Number'];
+        order.source = "daraz"
+        order.courier_id = "lk-dex";
         order.invoice_number = "DRZ" + lineItem['Order Number'];
         order.customer = 
         {
@@ -370,7 +408,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
           last_name : "",
           address1: lineItem["Billing Address"],
           address2: "",
-          city: "",
+          city: lineItem["Billing Address5"],
           createdAt: new Date(),
           updatedAt: new Date(),
           phone: lineItem["Billing Phone Number"],
@@ -379,7 +417,6 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
           // Add other customer details if available
         } as Customer;
         order.selected_payment_method = {method:  lineItem["Payment Method"]}; // Set payment method
-        order.courier_id = "lk-dex"; // Set courier
         order.tracking_number = lineItem['Tracking Code']; // Use order number as tracking number
         // Set other order properties accordingly
         order.line_items = [

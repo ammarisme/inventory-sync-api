@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
+import { Controller, Delete, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
 import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -6,10 +6,15 @@ import { randomBytes } from 'crypto';
 import { OrderService } from '../models/order/order.service';
 import * as fs from 'fs/promises'; // Using promises for cleaner syntax 
 import { error } from 'console';
+import { OrderSourceService } from '../models/order_source/order-source.service';
+import { OrderSource } from '../models/order_source/order-source.schema';
 
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly service: OrderService) {}
+  constructor(
+    private readonly service: OrderService,
+    private readonly orderSourceService: OrderSourceService,
+  ) {}
 
   @Post("/import")
   @UseInterceptors(
@@ -212,6 +217,33 @@ export class OrderController {
       // Return an error response
       return { error: 'Failed to ship orders' };
     }
+  }
+
+  //order source crud
+  
+  @Post("/order-source")
+  async createOrderSource(@Body() orderSourceData: OrderSource) {
+    return this.orderSourceService.create(orderSourceData);
+  }
+
+  @Get("/order-source")
+  async findAllOrderSource(): Promise<OrderSource[]> {
+    return this.orderSourceService.findAll();
+  }
+
+  @Get('/order-source/:id')
+  async findOrderSourceById(@Param('id') id: string): Promise<OrderSource | null> {
+    return this.orderSourceService.findById(id);
+  }
+
+  @Put('/order-source/:id')
+  async updateOrderSourceById(@Param('id') id: string, @Body() newData: Partial<OrderSource>): Promise<OrderSource | null> {
+    return this.orderSourceService.updateById(id, newData);
+  }
+
+  @Delete('/order-source:id')
+  async deleteOrderSourceById(@Param('id') id: string): Promise<boolean> {
+    return this.orderSourceService.deleteById(id);
   }
   
 }
