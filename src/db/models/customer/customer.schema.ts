@@ -44,7 +44,7 @@ export const CustomerSchema = new mongoose.Schema<Customer>({
   },
   phone: {
     type: String,
-    required: true,
+    required: false,
   },
   email: {
     type: String,
