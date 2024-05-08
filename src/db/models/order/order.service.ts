@@ -1,9 +1,10 @@
 import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue } from './order.schema';
+import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue, RevenueStatus, CostStatus } from './order.schema';
 import { CreateCustomerDto, Customer } from '../customer/customer.schema';
 import { City } from '../cities/cities.schema';
 import { State } from '../state/state.schema';
+import { RevenueSchema } from '../revenue/revenue.schema';
 
 @Injectable()
 export class OrderService {
@@ -23,6 +24,16 @@ export class OrderService {
     createOrdeDto.createdAt = new Date();
     createOrdeDto.revenues = []
     createOrdeDto.costs = []
+
+    if(["cod", "cheque", "daraz"].includes((createOrdeDto.selected_payment_method as {method: string}).method)){
+      createOrdeDto.revenue_status = RevenueStatus.pending;
+    }else{
+      createOrdeDto.revenue_status = RevenueStatus.paid;
+    }
+    
+    createOrdeDto.cost_status = CostStatus.pending;
+    
+
     // Create the customer DTO
     const newCustDto: CreateCustomerDto = {
         customer_id: createOrdeDto.customer.phone,
@@ -96,6 +107,7 @@ export class OrderService {
   async findOrdersByStatus(status: String): Promise<Order[]> {
     return this.model.find({ status: status }).populate('customer').exec();
   }
+
 
   async updateOrdersStatus(status: string, orderIds: string[]): Promise<Object> {
     try {  
@@ -178,6 +190,7 @@ export class OrderService {
     }));
     return ordersWithCustomFields;
 }
+
 
 
 async findByTrackingNumberWithCustomFields(tracking_number: string): Promise<OrderWithCustomFields | null> {
@@ -302,6 +315,26 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
     return true;
   }
 
+  async updateRevenueStatusByIdWithRemark(orderId: String, status: String, status_remark: String): Promise<boolean> {
+    // Define the status history object
+    const statusHistoryObj = {
+      status: status,
+      status_remark: status_remark,
+      updatedAt: new Date() // Set the updatedAt time
+    };
+  
+    // Update the order document
+    await this.model.updateOne(
+      { order_id: orderId }, 
+      { 
+        $set: { revenue_status: status },
+        $push: { revenue_history: statusHistoryObj }
+      }
+    ).exec();
+  
+    return true;
+  }
+
   async updateTracking(order_id: String, courier_id: String, tracking_number: String): Promise<boolean> {
     this.model.updateOne({ order_id: order_id }, { courier_id: courier_id, tracking_number: tracking_number }).exec();
     return true;
@@ -416,7 +449,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
           state: lineItem["Billing Address3"],
           // Add other customer details if available
         } as Customer;
-        order.selected_payment_method = {method:  lineItem["Payment Method"]}; // Set payment method
+        order.selected_payment_method = {method:  "daraz"}; // Set payment method
         order.tracking_number = lineItem['Tracking Code']; // Use order number as tracking number
         // Set other order properties accordingly
         order.line_items = [
@@ -513,6 +546,69 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
     ]).exec();
 }
 
+
+//Revenue functions
+ 
+async countOrdersByRevenueStatus(): Promise<{ status: string, count: number }[]> {
+  return this.model.aggregate([
+      {
+          $group: {
+              _id: "$revenue_status",
+              count: { $sum: 1 }
+          }
+      },
+      {
+          $project: {
+              status: "$_id",
+              count: 1,
+              _id: 0
+          }
+      }
+  ]).exec();
+}
+
+
+async findByRevenueStatusWithCustomFields(status: RevenueStatus): Promise<OrderWithCustomFields[]> {
+  const orders = await this.model.find({ revenue_status: status }).populate("customer").exec();
+  const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
+      const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
+      let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
+      const currentTime = new Date();
+      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime()); // Difference in milliseconds
+      const hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)); // Convert milliseconds to hours
+      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
+      
+      // Calculate order_age if createdAt is defined
+      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null; // Difference in days
+
+      return { ...order.toObject(), time_in_status: hoursDifference, order_total_display: formattedOrderTotal,order_age: orderAge } as OrderWithCustomFields; // Cast to OrderWithCustomFields
+  }));
+  return ordersWithCustomFields;
+}
+
+
+async findOrdersByRevenueStatus(status: RevenueStatus): Promise<Order[]> {
+  return this.model.find({ revenue_status: status }).populate('customer').exec();
+}
+
+async updateRevenueStatusById(orderId: String, status: RevenueStatus): Promise<boolean> {
+  this.model.updateOne({ order_id: orderId }, { revenue_status: status}).exec();
+  return true;
+}
+
+async updateOrderRevenueStatus(status: RevenueStatus, orderIds: string[]): Promise<Object> {
+  try {  
+     // Update order statuses to "allocated"
+     await Promise.all(orderIds.map(order_id =>
+      this.model.updateOne({ order_id: order_id }, { revenue_status:status }).exec()
+    ));
+
+  } catch (error) {
+    console.error(error);
+    return {"error" : error};
+  }
+  }
 }
 
 function getAllRevenues(createOrdeDto: CreateOrderDto): Revenue[] {

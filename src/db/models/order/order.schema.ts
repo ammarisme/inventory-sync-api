@@ -4,6 +4,19 @@ import { Types } from 'mongoose';
 import { Customer } from '../customer/customer.schema';
 
 
+export enum RevenueStatus {
+  Default = "pending",
+  pending = "pending",
+  paid = "paid",
+  refunded = "refunded",
+  realized = "realized",
+}
+
+export enum CostStatus {
+  Default = "pending",
+  pending = "pending",
+  settled = "settled",
+}
 
 export enum OrderStatuses {
   order_requested = 	"order_requested",
@@ -185,6 +198,7 @@ export class StatusHistory{
   dimensions?: {};
   status: String;
   status_history : StatusHistory[];
+  revenue_history : StatusHistory[];
   line_items: [];
   order_total: number;
   return_reason?: ReturnReason; // Reason code, remark
@@ -194,6 +208,8 @@ export class StatusHistory{
   selected_payment_method?: SelectedPaymentMethod; // Selected payment method object
   payments?: Payment[]; // Array of Payment objects
   revenues?: Revenue[]; // Array of Payment objects
+  revenue_status: RevenueStatus;
+  cost_status: CostStatus;
   costs?: Cost[]; // Array of Payment objects
   refunds?: Refund[]; // Array of Refund objects
   customer : Types.ObjectId
@@ -219,6 +235,7 @@ export const OrderSchema = new mongoose.Schema({
   dimensions: {},
   status: String,
   status_history : [],
+  revenue_history : [],
   line_items: [],
   order_total: Number,
   return_reason: {},
@@ -227,6 +244,8 @@ export const OrderSchema = new mongoose.Schema({
   selected_payment_method: {},
   payments: [],
   revenues: [], // Array of Payment objects
+  revenue_status: String,
+  cost_status: String,
   costs: [], // Array of Payment objects
   refunds: [], // Array of Refund objects
   tracking_number : String,
@@ -249,6 +268,7 @@ export class CreateOrderDto {
   dimensions: {};
   status: String;
   status_history : [];
+  revenue_history : [];
   line_items: LineItem[];
   order_total: Number;
   return_reason: {};
@@ -259,6 +279,8 @@ export class CreateOrderDto {
   payments: []; // Array of Payment objects
   revenues?: Revenue[]; // Array of Payment objects
   costs?: Cost[]; // Array of Payment objects
+  revenue_status : String;
+  cost_status: String;
   refunds: []; // Array of Refund objects
   customer: Customer;
   courier_id : String;
@@ -274,6 +296,7 @@ export class ParseOrderDto {
   dimensions: {};
   status: String;
   status_history : [];
+  revenue_history : [];
   line_items: LineItem[];
   order_total: Number;
   return_reason: {};

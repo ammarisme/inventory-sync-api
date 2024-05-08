@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
-import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
+import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, RevenueStatus, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomBytes } from 'crypto';
@@ -159,10 +159,6 @@ export class OrderController {
 
   
   
-  // @Get("generate-customers")
-  // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
-  //    return this.service.migrateCustomersFromOrdersToCustomersCollection();
-  // }
 
   @Get("/by-status/:status")
   async findByStatus(@Param("status") status: string): Promise<Order[]> {
@@ -252,5 +248,37 @@ export class OrderController {
   async deleteOrderSourceById(@Param('id') id: string): Promise<boolean> {
     return this.orderSourceService.deleteById(id);
   }
+
+  @Get('/revenue-status/:status')
+  async findByRevenueStatusWithCustomFields(@Param('status') status: string): Promise<Order[] | null> {
+    return this.service.findByRevenueStatusWithCustomFields(status as RevenueStatus);
+  }
+
+  @Get('/revenue-status/:status')
+  async findOrdersByRevenueStatus(@Param('status') status: string): Promise<Order[] | null> {
+    return this.service.findOrdersByRevenueStatus(status as RevenueStatus);
+  }
+  
+  @Get("/count-by-revenue-status")
+  async countByRevenueStatus(): Promise<{ status: string, count: number }[]> {
+    return this.service.countOrdersByRevenueStatus();
+  } 
+
+
+  @Put("/update-revenue-status")
+  async updateOrderRevenueStatus(@Body() dto: UpdateOrderStatusDto) {
+    if((await this.service.findByOrderId(dto.order_id))){
+      return this.service.updateRevenueStatusById(dto.order_id, dto.status as RevenueStatus);
+    }else{
+      return {
+        'error_message': 'object doesnt exist'
+      }
+    }
+  }
+
+  
+ 
+
+  
   
 }
