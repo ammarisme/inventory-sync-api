@@ -82,13 +82,20 @@ export class OrderController {
 
   @Post()
   async create(@Body() orderCreateDto: CreateOrderDto) {
-    if(!(await this.service.findByOrderId(orderCreateDto.order_id))){
-      this.service.create(orderCreateDto);
-    }else{
+    try{
+      if(!(await this.service.findByOrderId(orderCreateDto.order_id))){
+        this.service.create(orderCreateDto);
+      }else{
+        return {
+          'error_message': 'object exists - ' + orderCreateDto.order_id
+        }
+      }
+    }catch(e){
       return {
-        'error_message': 'object exists - ' + orderCreateDto.order_id
+        'error_message':  e
       }
     }
+    
   }
   @Post("/add-tracking-status") // Define the new endpoint for adding tracking status
   async addTrackingStatus(@Body() dto: AddTrackingStatus) {
