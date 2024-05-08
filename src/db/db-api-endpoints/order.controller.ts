@@ -46,7 +46,7 @@ export class OrderController {
     for(const order of orders){
       try{
         if(!(await this.service.findByOrderId(order.order_id))){
-          if(order.customer.phone== ""){
+          if(!order.customer.phone || order.customer.phone== ""){
             errors.push(
               {
                 "order_id" : order.order_id,
