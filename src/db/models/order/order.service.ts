@@ -134,6 +134,24 @@ export class OrderService {
         return {"error" : error};
       }
       }
+
+      async updateReturns(order_id: string, status: string, status_remark: string, return_items: any[]): Promise<Object> {
+        try {  
+          // Calculate the total return amount
+          let return_total = return_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+      
+          // Update the order document with the provided order_id
+          let result = await this.model.updateOne(
+            { order_id: order_id },
+            { $set: { return_items: return_items, return_total: return_total } }
+          ).exec();
+      
+        } catch (error) {
+          console.error(error);
+          return { error: error };
+        }
+      }
+      
   // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
   //   try {
   //     // Find all orders

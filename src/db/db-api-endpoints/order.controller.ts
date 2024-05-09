@@ -222,6 +222,28 @@ export class OrderController {
     }
   }
 
+  @Put('/update-returns')
+  async updateReturns(@Body() data) {
+    try {
+      // Validate incoming data
+      if (!data || !data.order_id || !data.return_items || !Array.isArray(data.return_items)) {
+        throw new Error('Invalid data provided');
+      }
+  
+      // Call the service to ship orders
+      const result = await this.service.updateReturns(data.order_id,data.status, data.status_remark, data.return_items);
+  
+      // Return successful result
+      return { success: true, result };
+    } catch (error) {
+      // Log the error for debugging purposes
+      console.error('Error in shipping orders:', error);
+  
+      // Return an error response
+      return { error: 'Failed to ship orders' };
+    }
+  }
+
   //order source crud
   
   @Post("/order-source")
@@ -276,7 +298,7 @@ export class OrderController {
     }
   }
 
-  
+
  
 
   

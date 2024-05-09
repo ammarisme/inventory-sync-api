@@ -200,7 +200,9 @@ export class StatusHistory{
   status_history : StatusHistory[];
   revenue_history : StatusHistory[];
   line_items: [];
+  return_items: [];
   order_total: number;
+  return_total: number;
   return_reason?: ReturnReason; // Reason code, remark
   courier_statuses?: []; // Array of LogisticsChain objects
   shipping_fee?: number;
@@ -216,6 +218,7 @@ export class StatusHistory{
   tracking_status: AddTrackingStatus[];
   createdAt: Date;
   source:String;
+  customer_note: string;
 }
 
 export interface OrderWithCustomFields extends Order {
@@ -237,7 +240,9 @@ export const OrderSchema = new mongoose.Schema({
   status_history : [],
   revenue_history : [],
   line_items: [],
+  return_items: [],
   order_total: Number,
+  return_total: Number,
   return_reason: {},
   shipping_fee: Number,
   cod_fee: Number,
@@ -256,7 +261,8 @@ export const OrderSchema = new mongoose.Schema({
   },
   courier_id : String,
   tracking_status: [],
-  source:String
+  source:String,
+  customer_note: String,
 });
 
 mongoose.model('orders', OrderSchema  );
@@ -270,6 +276,7 @@ export class CreateOrderDto {
   status_history : [];
   revenue_history : [];
   line_items: LineItem[];
+  return_items: LineItem[];
   order_total: Number;
   return_reason: {};
   tracking_status: AddTrackingStatus[];
@@ -287,6 +294,7 @@ export class CreateOrderDto {
   tracking_number : String;
   createdAt: Date;
   source: string;
+  customer_note: string;
 }
 
 export class ParseOrderDto {
@@ -298,7 +306,9 @@ export class ParseOrderDto {
   status_history : [];
   revenue_history : [];
   line_items: LineItem[];
+  return_items: LineItem[];
   order_total: Number;
+  return_total:Number;
   return_reason: {};
   tracking_status: AddTrackingStatus[];
   shipping_fee: Number;
@@ -313,6 +323,7 @@ export class ParseOrderDto {
   tracking_number : String;
   createdAt: Date;
   source:String;
+  customer_note: string;
 }
 
 export class UpdateOrderStatusDto {
