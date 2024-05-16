@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Post, Body, Put, Param, UploadedFile, UseInterceptors, Query } from '@nestjs/common';
-import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, RevenueStatus, UpdateOrderStatusDto, UpdateTrackingDto } from '../models/order/order.schema';
+import { AddTrackingStatus, CreateOrderDto, Order, OrderWithCustomFields, RevenueStatus, UpdateOrderNote, UpdateOrderStatusDto, UpdateTrackingDataDto, UpdateTrackingDto } from '../models/order/order.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { randomBytes } from 'crypto';
@@ -151,6 +151,38 @@ export class OrderController {
       }
     }
   }
+
+  @Put("/update-tracking-data")
+  async updateTrackingData(@Body() dto: UpdateTrackingDataDto) {
+    try{
+    if((await this.service.findByOrderId(dto.order_id))){
+      this.service.updateTrackingData(dto.order_id, dto.status, dto.revenue_status, dto.tracking_data);
+      return {
+        'status': 'ok',
+        "id": dto.order_id
+      }
+    }else{
+      return {
+        'error_message': 'object doesnt exist'
+      }
+    }
+  }catch(ex){
+      throw ex
+    }
+  }
+
+  @Put("/update-order-note")
+  async updateOrderNote(@Body() dto: UpdateOrderNote) {
+    if((await this.service.findByOrderId(dto.order_id))){
+      return this.service.updateOrderNote(dto.order_id, dto.order_note);
+    }else{
+      return {
+        'error_message': 'object doesnt exist'
+      }
+    }
+  }
+
+  
 
   @Get()
   async findAll(): Promise<Order[]> {

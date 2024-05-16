@@ -1,6 +1,6 @@
 import { Model, UpdateQuery } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue, RevenueStatus, CostStatus } from './order.schema';
+import { Order, CreateOrderDto, AddTrackingStatus, LineItem, OrderStatuses, OrderWithCustomFields, ParseOrderDto, Cost, Revenue, RevenueStatus, CostStatus, TrackingDataDto } from './order.schema';
 import { CreateCustomerDto, Customer } from '../customer/customer.schema';
 import { City } from '../cities/cities.schema';
 import { State } from '../state/state.schema';
@@ -8,6 +8,7 @@ import { RevenueSchema } from '../revenue/revenue.schema';
 
 @Injectable()
 export class OrderService {
+ 
   constructor(
     @Inject('ORDER_MODEL')
     private model: Model<Order>,
@@ -143,7 +144,7 @@ export class OrderService {
           // Update the order document with the provided order_id
           let result = await this.model.updateOne(
             { order_id: order_id },
-            { $set: { return_items: return_items, return_total: return_total } }
+            { $set: { return_items: return_items, return_total: return_total , status : "ndr"} }
           ).exec();
       
         } catch (error) {
@@ -152,43 +153,6 @@ export class OrderService {
         }
       }
       
-  // async migrateCustomersFromOrdersToCustomersCollection(): Promise<void> {
-  //   try {
-  //     // Find all orders
-  //     const orders = await this.model.find().exec();
-  
-  //     // Iterate through each order
-  //     for (const order of orders) {
-  //       const { customer: orderCustomer } = order;
-  
-  //       // Check if the order has a customer object
-  //       if (orderCustomer && orderCustomer.phone) {
-          
-
-  //         const newcus = new CreateCustomerDto()
-  //         newcus.customer_id = orderCustomer.phone;
-  //         newcus.state = "active";
-  //         newcus.address1 = orderCustomer.address1??"";
-  //         newcus.customer_id = orderCustomer.phone??"";
-  //         newcus.first_name = orderCustomer.first_name??"";
-  //         newcus.last_name = orderCustomer.last_name??"";
-  //         newcus.phone = orderCustomer.phone??"";
-  //         newcus.email = orderCustomer.email??"";
-  //         newcus.state = orderCustomer.state??"";
-  //         newcus.createdAt = new Date();
-  //         newcus.updatedAt = new Date();
-  //         const newCustomer = await this.customermodel.create(newcus);
-
-  //         // Update the order's customer field with the newly created customer's ID
-  //         await this.model.findByIdAndUpdate(order._id, { customer_info: newCustomer._id }).exec();
-  //       }
-  //     }
-  //     console.log('Customer migration completed successfully');
-  //   } catch (error) {
-  //     console.error('Error migrating customers:', error);
-  //     throw error;
-  //   }
-  // }
   
   async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
     const orders = await this.model.find({ status: status }).populate("customer").exec();
@@ -355,6 +319,15 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
 
   async updateTracking(order_id: String, courier_id: String, tracking_number: String): Promise<boolean> {
     this.model.updateOne({ order_id: order_id }, { courier_id: courier_id, tracking_number: tracking_number }).exec();
+    return true;
+  }
+
+  async updateTrackingData(order_id: any, mystatus: String, revenue_status : String,  tracking_data: TrackingDataDto[]) {
+    this.model.updateOne({ order_id: order_id }, {tracking_data: tracking_data,revenue_status : revenue_status,  status : mystatus}).exec();
+  }
+
+  async updateOrderNote(order_id: String, order_note: String): Promise<boolean> {
+    this.model.updateOne({ order_id: order_id }, { order_note: order_note }).exec();
     return true;
   }
 

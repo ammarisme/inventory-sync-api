@@ -216,9 +216,11 @@ export class StatusHistory{
   refunds?: Refund[]; // Array of Refund objects
   customer : Types.ObjectId
   tracking_status: AddTrackingStatus[];
+  tracking_data: [];
   createdAt: Date;
   source:String;
   customer_note: string;
+  order_note: string;
 }
 
 export interface OrderWithCustomFields extends Order {
@@ -261,8 +263,10 @@ export const OrderSchema = new mongoose.Schema({
   },
   courier_id : String,
   tracking_status: [],
+  tracking_data: [],
   source:String,
   customer_note: String,
+  order_note: String
 });
 
 mongoose.model('orders', OrderSchema  );
@@ -280,6 +284,7 @@ export class CreateOrderDto {
   order_total: Number;
   return_reason: {};
   tracking_status: AddTrackingStatus[];
+  tracking_data: [];
   shipping_fee: Number;
   cod_fee: Number;
   selected_payment_method: {};
@@ -295,6 +300,7 @@ export class CreateOrderDto {
   createdAt: Date;
   source: string;
   customer_note: string;
+  order_note: string;
 }
 
 export class ParseOrderDto {
@@ -311,6 +317,7 @@ export class ParseOrderDto {
   return_total:Number;
   return_reason: {};
   tracking_status: AddTrackingStatus[];
+  tracking_data: [];
   shipping_fee: Number;
   cod_fee: Number;
   selected_payment_method: {};
@@ -324,6 +331,7 @@ export class ParseOrderDto {
   createdAt: Date;
   source:String;
   customer_note: string;
+  order_note: string;
 }
 
 export class UpdateOrderStatusDto {
@@ -338,8 +346,29 @@ export class UpdateTrackingDto {
   tracking_number: String;
 }
 
+export class UpdateTrackingDataDto {
+  order_id: String;
+  tracking_data: TrackingDataDto[];
+  status: String;
+  revenue_status: String;
+}
+
+export class UpdateOrderNote {
+  order_id: String;
+order_note: String;
+
+}
+
+
+
 export class AddTrackingStatus {
   order_id: String;
   courier_id: String;
   message: String;
+}
+
+export class TrackingDataDto{
+  status : String;
+  description : String;
+  time : String;
 }
