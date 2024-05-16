@@ -8,6 +8,7 @@ import { CourierSchema } from '../models/courier/courier.schema';
 import { CitySchema } from '../models/cities/cities.schema';
 import { StateSchema } from '../models/state/state.schema';
 import { OrderSourceSchema } from '../models/order_source/order-source.schema';
+import { ProductMapping, ProductMappingSchema } from '../models/product_mapping/product-mapping.schema';
 
 export const mongoProviders = [
   {
@@ -53,6 +54,12 @@ export const mongoProviders = [
   {
     provide: 'ORDER_SOURCE_MODEL',
     useFactory: (connection: Connection) => connection.model('OrderSource', OrderSourceSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+
+  {
+    provide: 'PRODUCT_MAPPING_MODEL',
+    useFactory: (connection: Connection) => connection.model('ProductMapping', ProductMappingSchema),
     inject: ['DATABASE_CONNECTION'],
   },
 ];

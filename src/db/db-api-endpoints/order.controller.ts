@@ -40,7 +40,7 @@ export class OrderController {
     }
 
     const data = await fs.readFile(file.path, 'utf-8'); // Read file content
-    const orders = this.service.parseDarazCsvData(data); // Parse the data based on your specific format
+    const orders = await this.service.parseDarazCsvData(data); // Parse the data based on your specific format
 
     var errors = []
     for(const order of orders){

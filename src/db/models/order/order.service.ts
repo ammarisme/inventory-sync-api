@@ -5,6 +5,7 @@ import { CreateCustomerDto, Customer } from '../customer/customer.schema';
 import { City } from '../cities/cities.schema';
 import { State } from '../state/state.schema';
 import { RevenueSchema } from '../revenue/revenue.schema';
+import { ProductMapping } from '../product_mapping/product-mapping.schema';
 
 @Injectable()
 export class OrderService {
@@ -18,6 +19,8 @@ export class OrderService {
     private cityModel: Model<City>,
     @Inject('STATE_MODEL')
     private stateModel: Model<State>,
+    @Inject('PRODUCT_MAPPING_MODEL')
+    private productMappingModel: Model<ProductMapping>,
   ) { }
 
   async create(createOrdeDto: CreateOrderDto): Promise<Order> {
@@ -374,7 +377,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
   }
 
 
-  parseDarazCsvData(data: string): CreateOrderDto[] {
+  async parseDarazCsvData(data: string): Promise<CreateOrderDto[]> {
     const lines = data.split('\n'); // Split data into lines
 
     // Extract header row (assuming the first line is the header)
@@ -404,18 +407,20 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
       const orderIndex = parsedData.findIndex(order => order.order_id === lineItem['Order Number']);
 
       // If order exists, add line item to its line_items array
+      const mapped_product = await this.productMappingModel.findOne({source_sku : lineItem["Seller SKU"]})
       if (orderIndex !== -1) {
-        const order = parsedData[orderIndex];
+        //if the sku has a mapping, add that sku instead.
         const lineItemObj = new LineItem(
-          lineItem["Item Name"],
-          lineItem["Seller SKU"],
-          1, // Parse quantity to integer
+          mapped_product!=null ? mapped_product.product_name : lineItem["Item Name"] ,
+          mapped_product!=null ? mapped_product.sku : lineItem["Seller SKU"],
+          mapped_product!=null ? mapped_product.quantity : 1,
           "piece(s)",
           parseFloat(lineItem['Unit Price']), // Parse unit price to float
           0.0, // Parse item tax to float
           0.0 // Parse item discount to float
         );
-        order.line_items.push(lineItemObj);
+        parsedData[orderIndex].line_items.push(lineItemObj);
+        parsedData[orderIndex].order_total = parsedData[orderIndex].line_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
         // Recalculate order total
       } else {
         // If order doesn't exist, create a new order object
@@ -442,17 +447,21 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         } as Customer;
         order.selected_payment_method = {method:  "daraz"}; // Set payment method
         order.tracking_number = lineItem['Tracking Code']; // Use order number as tracking number
+
+        
+        const lineItemObj = new LineItem(
+          mapped_product!=null ? mapped_product.product_name : lineItem["Item Name"] ,
+          mapped_product!=null ? mapped_product.sku : lineItem["Seller SKU"],
+          mapped_product!=null ? mapped_product.quantity : 1,
+          "piece(s)",
+          parseFloat(lineItem['Unit Price']), // Parse unit price to float
+          0.0, // Parse item tax to float
+          0.0 // Parse item discount to float
+        );
+
         // Set other order properties accordingly
         order.line_items = [
-          new LineItem(
-            lineItem["Item Name"],
-            lineItem["Seller SKU"],
-            1, // Parse quantity to integer
-            "piece(s)",
-            parseFloat(lineItem['Unit Price']), // Parse unit price to float
-            0.0, // Parse item tax to float
-            0.0 // Parse item discount to float
-          )
+          lineItemObj
         ];
         // Calculate order total
         order.order_total = order.line_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
@@ -460,7 +469,7 @@ async findByOrderIdWithCustomFields(orderId: string): Promise<OrderWithCustomFie
         order.status_history = [];
         order.status_history.push(statusHistoryObj)
         parsedData.push(order);
-      }
+      }    
     }
 
     return parsedData;
