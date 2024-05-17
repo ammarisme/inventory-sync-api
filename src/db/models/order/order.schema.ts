@@ -221,6 +221,7 @@ export class StatusHistory{
   source:String;
   customer_note: string;
   order_note: string;
+  invoice_generation_success_count : number;
 }
 
 export interface OrderWithCustomFields extends Order {
@@ -266,7 +267,8 @@ export const OrderSchema = new mongoose.Schema({
   tracking_data: [],
   source:String,
   customer_note: String,
-  order_note: String
+  order_note: String,
+  invoice_generation_success_count : Number
 });
 
 mongoose.model('orders', OrderSchema  );
@@ -277,7 +279,7 @@ export class CreateOrderDto {
   weight: Number;
   dimensions: {};
   status: String;
-  status_history : [];
+  status_history : StatusHistory[];
   revenue_history : [];
   line_items: LineItem[];
   return_items: LineItem[];
@@ -301,6 +303,7 @@ export class CreateOrderDto {
   source: string;
   customer_note: string;
   order_note: string;
+  invoice_generation_success_count : Number;
 }
 
 export class ParseOrderDto {
@@ -332,6 +335,7 @@ export class ParseOrderDto {
   source:String;
   customer_note: string;
   order_note: string;
+  invoice_generation_success_count : Number;
 }
 
 export class UpdateOrderStatusDto {

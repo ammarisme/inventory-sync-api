@@ -196,11 +196,11 @@ export class OrderController {
   async findByStatus(@Param("status") status: string): Promise<Order[]> {
     return this.service.findOrdersByStatus(status);
   }
-
+  @Get("/uninvoiced")
+  async findUninvoicedOrders(): Promise<Order[]> {
+    return this.service.findUninvoicedOrders();
+  }
  
-
-  // orders/
-
   @Get("/by-status-with-custom-fields/:status")
   async findByStatusWithCustomFields(@Param("status") status: string): Promise<Order[]> {
     return this.service.findByStatusWithCustomFields(status);

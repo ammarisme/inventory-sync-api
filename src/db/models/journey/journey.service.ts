@@ -181,6 +181,7 @@ export class JourneyService {
     }
   }
   
+  
   async getJourney(journeyId: string): Promise<Journey> {
     try {
       // Find the journey by ID and populate the "orders" field to get all associated orders
