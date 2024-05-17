@@ -329,7 +329,9 @@ export class OrderService {
     }
 
     if(status == "delivered" || status == "shipped" || status == "invoice_generated"){
-      this.updateOrderStatus(orderId, status)
+      if(orderId.length < 6){
+        this.updateOrderStatus(orderId, status);
+      }
     }
    
 
