@@ -141,6 +141,8 @@ export class SelectedPaymentMethod {
   @Prop({ required: false })
   method_id?: string; // Optional payment method ID
 
+  method?: string; // Optional payment method ID
+
   @Prop({ required: false })
   remark?: string; // Optional payment method remark
 }

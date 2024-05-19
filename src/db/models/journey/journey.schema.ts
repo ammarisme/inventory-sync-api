@@ -1,6 +1,7 @@
 import { Document, Schema, Types } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Order, OrderSchema } from '../order/order.schema';
+import { User } from '../user/user.schema';
 
 // Define the interface for the Journey document
 export interface Journey extends Document {
@@ -50,6 +51,26 @@ export const JourneySchema = new mongoose.Schema<Journey>({
 
 // Create the Journey model
 export const JourneyModel = mongoose.model<Journey>('Journey', JourneySchema);
+
+
+export interface JourneyDto {
+  _id: String; // Journey start date and time
+  rider: User; // Reference to the rider (user)
+  orders: Order[]; // Array of order references
+  startDate: String; // Journey start date and time
+  createdAt: String; // Journey start date and time
+  updatedAt: String; // Journey start date and time
+  status: string; // Journey status
+  endDate: String; // Journey end date and time (optional),
+  packageCount : Number,
+  cod_returns : Number,
+  cod_collected : Number,
+  cod_pending : Number,
+  cod_total : Number,
+  shipping_fee_collected : Number,
+  shipping_fee_pending : Number,
+  shipping_fee_total: Number,
+}
 
 export class CreateJourneyDto extends JourneyModel{
   rider_id: String;

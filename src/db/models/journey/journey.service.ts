@@ -1,8 +1,9 @@
 import { Model, Types } from 'mongoose';
 import { Injectable, Inject } from '@nestjs/common';
-import { Journey, JourneyModel } from './journey.schema';
+import { Journey, JourneyDto, JourneyModel } from './journey.schema';
 import { Order, OrderStatuses } from '../order/order.schema';
 import { User } from '../user/user.schema';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class JourneyService {
@@ -77,6 +78,30 @@ export class JourneyService {
       return {"eror" : error};
     }
     }
+
+  async resetJourney(journeyId: string): Promise<Object> {
+    try {
+      let journey = await this.model.findById(journeyId).exec();
+      if (!journey) {
+        // If journey doesn't exist, create a new one
+        throw new Error(`No journey with ID ${journeyId}`);
+      }
+
+    
+       // Update order statuses to "allocated"
+       await Promise.all(journey.orders.map(order_id =>
+        this.orderModel.updateOne({ order_id: order_id }, { status: OrderStatuses.invoice_pending }).exec()
+      ));
+
+      journey.orders = [];
+
+      await journey.save();
+      return journey;
+    } catch (error) {
+      console.error(error);
+      return { "eror": error };
+    }
+  }
     
   async startJourney(journeyId: string): Promise<Journey> {
     try {
@@ -182,21 +207,80 @@ export class JourneyService {
   }
   
   
-  async getJourney(journeyId: string): Promise<Journey> {
+  async  getJourney(journeyId: string): Promise<JourneyDto> {
     try {
       // Find the journey by ID and populate the "orders" field to get all associated orders
-      const journey = await this.model.findById(journeyId).populate('orders').exec();
+      const journey = await JourneyModel.findById(journeyId)
+      .populate({
+          path: 'orders',
+          populate: {
+              path: 'customer', // Populate the customer field in the orders
+          },
+      })
+      .exec() as unknown as JourneyDto;
       if (!journey) {
         throw new Error(`Journey with ID ${journeyId} not found`);
       }
 
-      // Extract and return the orders
-      return journey;
+  
+      // Initialize variables for calculated amounts
+      let pendingCOD = 0;
+      let collectedCOD = 0;
+      let deliveryChargesCollected = 0;
+      let deliveryChargesPending = 0;
+      let returnCOD = 0;
+  
+      // Iterate through orders to calculate COD and delivery charges
+      for (const order of journey.orders) {
+        // Here, you would calculate the COD and delivery charges based on the order properties
+        // For demonstration, let's assume CODAmount and deliveryCharge are properties of the order object
+        if (order.selected_payment_method.method == "cod" && order.status === 'delivered') {
+          collectedCOD += order.order_total;
+        }else if(order.selected_payment_method.method == "cod" ){
+          pendingCOD += order.order_total
+        }
+
+        if(order.selected_payment_method.method == "cod" && order.status == "ndr"){
+          returnCOD += order.return_total;
+        }
+        
+  
+        if (order.status == 'delivered' || order.status == "ndr") {
+          deliveryChargesCollected += order.shipping_fee;
+        } else  {
+          deliveryChargesPending += order.shipping_fee;
+        }
+      }
+  
+      // Create a new JourneyDto object with the journey details and calculated amounts
+      const journeyDto: JourneyDto = {
+        _id : journey._id,
+        rider: journey.rider,
+        orders: journey.orders,
+        startDate: journey.startDate, // Convert Date to string
+        createdAt: journey.createdAt, // Convert Date to string
+        updatedAt: journey.updatedAt, // Convert Date to string
+        status: journey.status,
+        endDate: journey.endDate ? journey.endDate : '', // Convert Date to string if endDate exists
+        packageCount: journey.orders.length,
+        cod_returns: returnCOD,
+        cod_collected: collectedCOD, // Assuming all COD amounts are collected
+        cod_pending: pendingCOD, // Assuming there are no pending COD amounts
+        cod_total: (collectedCOD + pendingCOD) - returnCOD,
+        shipping_fee_collected: deliveryChargesCollected,
+        shipping_fee_pending: deliveryChargesPending,
+        shipping_fee_total: deliveryChargesCollected + deliveryChargesPending,
+      };
+  
+      // Return the JourneyDto object
+      return journeyDto;
     } catch (error) {
       console.error(error);
-      throw new Error(`Failed to get orders for journey with ID ${journeyId}`);
+      throw new Error(`Failed to get journey with ID ${journeyId}`);
     }
   }
+
+  
 
   async getOrCreateJourneyByRider(riderId: string): Promise<Journey> {
     try {
@@ -238,6 +322,40 @@ export class JourneyService {
     } catch (error) {
       console.error(error);
       throw new Error('Failed to get or create journey for rider');
+    }
+  }
+  
+
+  async getJourneyByRiderEmail(email: string): Promise<JourneyDto[]> {
+    try {
+      const user = await this.userModel.findOne({ email: email });
+      // Check if there is a pending or ongoing journey for the rider
+      const journeys = await this.model.find({
+        rider: user._id,
+      }).populate({
+        path: 'orders',
+        populate: {
+          path: 'customer',
+          model: 'Customer' // Assuming the name of the Customer model is 'Customer'
+        }
+      }).exec();
+  
+      // Format dates and times to human-readable format
+      const formattedJourneys = journeys.map(journey => ({
+        ...journey.toObject(),
+        endDate: journey.endDate?journey.endDate.toLocaleString() :"", // Adjust as needed
+        startDate:  journey.startDate?journey.startDate.toLocaleString() :"", // Adjust as needed
+        createdAt: journey.createdAt.toLocaleString(), // Adjust as needed
+        updatedAt: journey.updatedAt.toLocaleString(), // Adjust as needed
+        // Assuming there are more date/time fields in the journey object
+      } as JourneyDto));
+  
+      // If a journey exists, return it
+      return formattedJourneys;
+  
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to get journeys for rider');
     }
   }
   

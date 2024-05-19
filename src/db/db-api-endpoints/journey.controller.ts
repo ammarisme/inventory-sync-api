@@ -47,6 +47,17 @@ export class JourneyController {
     }
   }
 
+  @Put('reset-orders/:journeyId')
+  async resetOrders(@Param('journeyId') journeyId: string) {
+    try {
+      const result = await this.journeyService.resetJourney(journeyId);
+      return result;
+    } catch (error) {
+      console.error(error);
+      return { error: 'Failed to add orders to journey' };
+    }
+  }
+
   @Put(':journeyId/start-journey')
   async startJourney(@Param('journeyId') journeyId: string) {
     try {
@@ -101,5 +112,14 @@ export class JourneyController {
     }
   }
 
+  @Get('by-rider-email/:email') // Change the route to avoid conflicts
+  async getJourneyByRiderId(@Param('email') email: string) {
+    try {
+      const result = await this.journeyService.getJourneyByRiderEmail(email);
+      return result;
+    } catch (error) {
+      return { error: error };
+    }
+  }
   
 }

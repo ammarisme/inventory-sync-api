@@ -19,7 +19,7 @@ export class CourierController {
   @Get(':id')
   async findById(@Param('id') id: string): Promise<Courier | null> {
     return this.service.findById(id);
-  }
+  } 
 
   @Put(':id')
   async updateById(@Param('id') id: string, @Body() newData: Partial<Courier>): Promise<Courier | null> {
