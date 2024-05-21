@@ -5,9 +5,12 @@ import mongoose, { Document } from 'mongoose';
 export class OrderSource extends Document {
   @Prop({ required: true })
   id: string;
-
   @Prop({ required: true })
   name: string;
+  @Prop({ required: true })
+  type: string;
+  @Prop({ required: false })
+  image_url: string;
 }
 
 export const OrderSourceSchema = new mongoose.Schema({

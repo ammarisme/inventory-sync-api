@@ -20,12 +20,26 @@ import { StateController } from '../db-api-endpoints/state.controller';
 import { OrderSourceService } from '../models/order_source/order-source.service';
 import { ProductMappingService } from '../models/product_mapping/product-mapping.service';
 import { ProductMappingController } from '../db-api-endpoints/product-mapping.controller';
+import { OrderSourceController } from '../db-api-endpoints/ordersource.controller';
+import { InventoryLocationService } from '../models/inventory/inventory-location.service';
+import { InventoryController } from 'src/controllers/inventory.controller';
+import { InventoryLocationController } from '../db-api-endpoints/inventory-location.controller';
+import { InventoryLocationTypeService } from '../models/inventory-location-types/inventory-location-type.service';
+import { InventoryLocationTypeController } from '../db-api-endpoints/inventory-location-type.controller';
+import { SalesChannelTypeService } from '../models/sales-channel-type/sales-channel-type.service.';
+import { SalesChannelTypeController } from '../db-api-endpoints/sales-channel-type.controller';
+import { MerchantService } from '../models/mechants/merchant.service.';
+import { MerchantController } from '../db-api-endpoints/merchant.controller';
 
 @Module({
   imports: [DatabaseModule],
   providers: [OrderService, CatService, UserService, JourneyService, CustomerService,
-     CourierService, CityService, StateService, OrderSourceService, ProductMappingService, ...mongoProviders],
+     CourierService, CityService, StateService, OrderSourceService, ProductMappingService, InventoryLocationService, InventoryLocationTypeService,
+    SalesChannelTypeService, MerchantService,
+     ...mongoProviders],
   controllers: [CatsController, OrderController, UsersController, JourneyController, CustomersController,
-     CourierController, CityController, StateController, ProductMappingController ]
+     CourierController, CityController, StateController, ProductMappingController, OrderSourceController, InventoryLocationController , InventoryLocationTypeController ,
+     SalesChannelTypeController, MerchantController
+    ]
 })
 export class MongoModule {}

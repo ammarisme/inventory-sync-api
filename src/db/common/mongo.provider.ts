@@ -9,6 +9,10 @@ import { CitySchema } from '../models/cities/cities.schema';
 import { StateSchema } from '../models/state/state.schema';
 import { OrderSourceSchema } from '../models/order_source/order-source.schema';
 import { ProductMapping, ProductMappingSchema } from '../models/product_mapping/product-mapping.schema';
+import { InventoryLocationSchema } from '../models/inventory/inventory-location.schema';
+import { InventoryLocationTypeSchema } from '../models/inventory-location-types/inventory-location-type.schema';
+import { SalesChannelTypeSchema } from '../models/sales-channel-type/sales-channel-type.schema';
+import { MerchantSchema } from '../models/mechants/merchant.schema';
 
 export const mongoProviders = [
   {
@@ -60,6 +64,27 @@ export const mongoProviders = [
   {
     provide: 'PRODUCT_MAPPING_MODEL',
     useFactory: (connection: Connection) => connection.model('ProductMapping', ProductMappingSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  
+  {
+    provide: 'INVENTORY_LOCATION_MODEL',
+    useFactory: (connection: Connection) => connection.model('InventoryLocation', InventoryLocationSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  {
+    provide: 'INVENTORY_LOCATION_TYPE_MODEL',
+    useFactory: (connection: Connection) => connection.model('InventoryLocationType', InventoryLocationTypeSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  {
+    provide: 'SALES_CHANNEL_TYPE_MODEL',
+    useFactory: (connection: Connection) => connection.model('SalesChannelType', SalesChannelTypeSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  {
+    provide: 'MERCHANT_MODEL',
+    useFactory: (connection: Connection) => connection.model('MerchantSchema', MerchantSchema),
     inject: ['DATABASE_CONNECTION'],
   },
 ];
