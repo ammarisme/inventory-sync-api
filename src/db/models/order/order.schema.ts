@@ -220,6 +220,7 @@ export class StatusHistory{
   tracking_status: AddTrackingStatus[];
   tracking_data: [];
   createdAt: Date;
+  updatedat: Date;
   source:String;
   customer_note: string;
   order_note: string;
@@ -268,6 +269,8 @@ export const OrderSchema = new mongoose.Schema({
   tracking_status: [],
   tracking_data: [],
   source:String,
+  createdAt: Date,
+  updatedat: Date,
   customer_note: String,
   order_note: String,
   invoice_generation_success_count : Number
@@ -302,6 +305,7 @@ export class CreateOrderDto {
   courier_id : String;
   tracking_number : String;
   createdAt: Date;
+  updatedat: Date;
   source: string;
   customer_note: string;
   order_note: string;
@@ -334,6 +338,7 @@ export class ParseOrderDto {
   courier_id : String;
   tracking_number : String;
   createdAt: Date;
+  updatedat: Date;
   source:String;
   customer_note: string;
   order_note: string;

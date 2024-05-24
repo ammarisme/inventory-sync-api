@@ -97,6 +97,7 @@ export class OrderService {
     const createdCat = new this.model({
       ...createOrdeDto,
       createdAt: new Date(),
+      updatedat: new Date(),
       customer: createdCustomer._id // Link customer to order
     });
     await createdCat.save();
