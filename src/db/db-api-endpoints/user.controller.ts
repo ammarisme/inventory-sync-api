@@ -20,4 +20,12 @@ export class UsersController {
       const user = await this.service.create(dto);
       return user!=null ? user : "User already exist"
   }
+
+  @Get("/get_riders")
+  async getRiders() {
+      const user = await this.service.findAllBy({
+        is_rider : true
+      });
+      return user!=null ? user : "No riders"
+  }
 }

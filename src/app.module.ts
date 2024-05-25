@@ -9,6 +9,8 @@ import { OldUserController } from './controllers/user.controller';
 import { SharedFunctions } from './controllers/sample-controller';
 import { MongoModule } from './db/common/mongo.module';
 import { OrderController } from './db/db-api-endpoints/order.controller';
+import { ReportsController } from './db/db-api-endpoints/reports.controller';
+import { ReportService } from './db/models/reports/reports.service';
 
 @Module({
   imports: [MongoModule],

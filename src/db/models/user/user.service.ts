@@ -27,6 +27,11 @@ export class UserService {
     return this.model.findOne(filter).exec();
   }
 
+  async findAllBy(filter): Promise<User[] | null> {
+    return this.model.find(filter).exec();
+  }
+
+
   async create(dto: CreateUserDto): Promise<User> {
     try {
       const user = await this.model.findOne({ email: dto.email }).exec();
