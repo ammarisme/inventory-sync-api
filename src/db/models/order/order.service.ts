@@ -753,6 +753,8 @@ export class OrderService {
       console.error(`Failed to create note: ${order_id}`, error);
     }
   }
+
+
   // async syncwoocommerce() {
   //   try {
 

@@ -1,7 +1,7 @@
 import { Document } from 'mongoose';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, SchemaFactory} from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-
+import { Types , Schema} from 'mongoose';
 
 export enum UserStatuses {
   active = 	"active",
@@ -20,9 +20,11 @@ export enum UserStatuses {
   is_rider : Boolean,
   is_admin : Boolean,
   is_courier : Boolean,
+  source: String,
+  organization: Types.ObjectId; // Reference to the rider (user)
 }
 
-export const UserSchema = new mongoose.Schema({
+export const UserSchema = new mongoose.Schema<User>({
   id: String,
   first_name: String,
   last_name: String,
@@ -32,6 +34,12 @@ export const UserSchema = new mongoose.Schema({
   is_rider : Boolean,
   is_admin : Boolean,
   is_courier : Boolean,
+  source: String,
+  organization: {
+    type: Schema.Types.ObjectId,
+    ref: 'User', // Reference to the User model for the rider
+    required: true,
+  },
 });
 
 mongoose.model('users', UserSchema  );
@@ -59,4 +67,5 @@ export class CreateUserDto {
   is_rider : Boolean;
   is_admin : Boolean;
   is_courier : Boolean;
+  source: String;
 }

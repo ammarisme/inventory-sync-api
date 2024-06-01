@@ -32,16 +32,18 @@ import { MerchantService } from '../models/mechants/merchant.service.';
 import { MerchantController } from '../db-api-endpoints/merchant.controller';
 import { ReportService } from '../models/reports/reports.service';
 import { ReportsController } from '../db-api-endpoints/reports.controller';
+import { OrganizationService } from '../models/organization/organization.service';
+import { OrganizationController } from '../db-api-endpoints/organization.controller';
 
 @Module({
   imports: [DatabaseModule],
   providers: [OrderService, CatService, UserService, JourneyService, CustomerService,
      CourierService, CityService, StateService, OrderSourceService, ProductMappingService, InventoryLocationService, InventoryLocationTypeService,
-    SalesChannelTypeService, MerchantService,ReportService,
+    SalesChannelTypeService, MerchantService,ReportService, OrganizationService,
      ...mongoProviders],
   controllers: [CatsController, OrderController, UsersController, JourneyController, CustomersController,
      CourierController, CityController, StateController, ProductMappingController, OrderSourceController, InventoryLocationController , InventoryLocationTypeController ,
-     SalesChannelTypeController, MerchantController, ReportsController
+     SalesChannelTypeController, MerchantController, ReportsController, OrganizationController,
     ]
 })
 export class MongoModule {}

@@ -13,6 +13,7 @@ import { InventoryLocationSchema } from '../models/inventory/inventory-location.
 import { InventoryLocationTypeSchema } from '../models/inventory-location-types/inventory-location-type.schema';
 import { SalesChannelTypeSchema } from '../models/sales-channel-type/sales-channel-type.schema';
 import { MerchantSchema } from '../models/mechants/merchant.schema';
+import { OrganizationSchema } from '../models/organization/organization.schema';
 
 export const mongoProviders = [
   {
@@ -85,6 +86,11 @@ export const mongoProviders = [
   {
     provide: 'MERCHANT_MODEL',
     useFactory: (connection: Connection) => connection.model('MerchantSchema', MerchantSchema),
+    inject: ['DATABASE_CONNECTION'],
+  },
+  {
+    provide: 'ORGANIZATION_MODEL',
+    useFactory: (connection: Connection) => connection.model('OrganizationSchema', OrganizationSchema),
     inject: ['DATABASE_CONNECTION'],
   },
 ];

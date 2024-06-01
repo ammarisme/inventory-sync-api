@@ -65,4 +65,87 @@ export class ReportService {
     }
   }
 
+  async detailedRiderReport(rider: string, start_date: string, end_date: string): Promise<any> {
+    try {
+        const parsedStartDate = new Date(start_date);
+        const parsedEndDate = new Date(end_date);
+        const riderObj = await this.userModel.findOne({ id: rider });
+        if (!riderObj || !riderObj.is_rider) {
+            throw new Error('Rider not found or not a rider');
+        }
+        const journeys = await this.journeyModel.find({
+            rider: riderObj._id,
+            startDate: { $gte: parsedStartDate },
+            endDate: { $lte: parsedEndDate }
+        }).populate('orders').exec();
+
+        const detailedReport = journeys.map(journey => {
+            const ordersDetails = (journey.orders as unknown[] as Order[]).map((order) => ({
+                orderId: order.order_id,
+                status: order.status,
+                order_total: order.order_total,
+                shipping_fee: order.shipping_fee,
+                createdAt: order.createdAt,
+            }));
+
+            const orderTotalSum = ordersDetails.reduce((sum, order) => sum + order.order_total, 0);
+            const shippingFeeSum = ordersDetails.reduce((sum, order) => sum + order.shipping_fee, 0);
+            const orderCount = ordersDetails.length;
+
+            return {
+                journeyId: journey._id,
+                journey_start_date: journey.startDate,
+                journey_end_date: journey.endDate,
+                orders: ordersDetails,
+                order_total_sum: orderTotalSum,
+                shipping_fee_sum: shippingFeeSum,
+                order_count: orderCount,
+            };
+        });
+
+        return detailedReport;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
+
+
+  
+  async groupBySource(startDate: Date, endDate: Date) {
+    return this.ordersl.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startDate,
+            $lt: endDate
+          },
+          status: "shipped"
+        }
+      },
+      {
+        $group: {
+          _id: "$source",
+          order_count: { $sum: 1 },
+          totalValue: { 
+            $sum: { 
+              $subtract: [ 
+                { $toDouble: { $ifNull: ["$order_total", 0] } }, 
+                { $toDouble: { $ifNull: ["$return_total", 0] } } 
+              ] 
+            } 
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          source: "$_id",
+          order_count: 1,
+          totalValue: 1
+        }
+      }
+    ]).exec();
+  }
 }
