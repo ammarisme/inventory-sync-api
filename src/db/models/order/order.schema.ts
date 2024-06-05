@@ -228,13 +228,14 @@ export class StatusHistory{
 }
 
 export interface OrderWithCustomFields extends Order {
-  time_in_status: number;
-  order_age: number;
+  time_in_status: string;
+  order_age: string;
   order_total_display: string;
   total_revenue: string,
   total_costs: string,
   profit: string,
   profit_percentage: string
+  created_date_time:string;
 }
 
 export const OrderSchema = new mongoose.Schema({

@@ -146,7 +146,7 @@ export class OrderService {
 
       await Promise.all(orderIds.map((order_id) => {
         if(order_id.length < 6){
-          this.updateOrderStatus(order_id, "shipped")
+          //this.updateOrderStatus(order_id, "shipped")
         }
       }
       ));
@@ -178,22 +178,54 @@ export class OrderService {
   async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
     const orders = await this.model.find({ status: status }).populate("customer").exec();
     const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
-      const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
-      let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
-      const currentTime = new Date();
-      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime()); // Difference in milliseconds
-      const hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)); // Convert milliseconds to hours
-      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
-
-      // Calculate order_age if createdAt is defined
-      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
-      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null; // Difference in days
-
-      return { ...order.toObject(), time_in_status: hoursDifference, order_total_display: formattedOrderTotal, order_age: orderAge } as OrderWithCustomFields; // Cast to OrderWithCustomFields
+      return this.getDetailedOrder(order)
     }));
     return ordersWithCustomFields;
   }
 
+
+  getDetailedOrder(order){
+    const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
+    let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
+    const currentTime = new Date();
+    const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime()); // Difference in milliseconds
+    const hoursDifference = (isNaN(Math.floor(timeDifference / (1000 * 60 * 60))) ? 0 : Math.floor(timeDifference / (1000 * 60 * 60))) + " hr(s)"; // Convert milliseconds to hours
+    const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "-";
+
+    // Calculate order_age if createdAt is defined
+    const created_date_time = order.createdAt ?  new Date(order.createdAt).toLocaleString("af-ZA", { timeZone: 'Asia/Colombo' }) : null;
+    const orderAge = order.createdAt ? Math.floor((currentTime.getTime() - order.createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null; // Difference in days
+    const orderAgedays = orderAge > 0 ? orderAge.toString() + " day(s)" : "-"
+    
+    
+      // Calculate total revenue
+      const totalRevenueNum = order.revenues.reduce((acc, revenue) => acc + convertToNumber(revenue.amount), 0);
+
+      // Calculate total costs
+      const totalCostsNum = order.costs.reduce((acc, cost) => acc + convertToNumber(cost.amount), 0);
+
+      // Convert the amount to a number if it's a string
+      function convertToNumber(amount: number | string): number {
+        return typeof amount === 'string' ? parseFloat(amount) : amount;
+      }
+      // Calculate profit
+      const profit = (totalRevenueNum - totalCostsNum);
+      // Calculate profit percentage (rounded to two decimals) and add % sign
+      const profitPercentage = Math.round((profit / totalCostsNum) * 100);
+
+      // Construct and return the OrderWithCustomFields object
+      return {
+        ...order.toObject(),
+        time_in_status: hoursDifference,
+        order_total_display: formattedOrderTotal,
+        order_age: orderAgedays,
+        total_revenue: totalRevenueNum.toLocaleString(),
+        total_costs: totalCostsNum.toLocaleString(),
+        profit: profit.toLocaleString(),
+        profit_percentage: profitPercentage.toLocaleString() + '%',
+        created_date_time : created_date_time,
+      } as OrderWithCustomFields;
+  }
 
 
   async findByTrackingNumberWithCustomFields(tracking_number: string): Promise<OrderWithCustomFields | null> {
@@ -207,23 +239,7 @@ export class OrderService {
       }
 
       // Extract necessary information from the order
-      const lastStatusChange = order.status_history[order.status_history.length - 1];
-      const updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date();
-      const currentTime = new Date();
-      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime());
-      let hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)) ?? 0;
-      hoursDifference = hoursDifference != null ? hoursDifference : 0;
-      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
-      const createdAt = order.createdAt ? new Date(order.createdAt) : 0;
-      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-
-      // Construct and return the OrderWithCustomFields object
-      return {
-        ...order.toObject(),
-        time_in_status: hoursDifference,
-        order_total_display: formattedOrderTotal,
-        order_age: orderAge
-      } as OrderWithCustomFields;
+      return this.getDetailedOrder(order);
     } catch (error) {
       // Handle any errors
       console.error("Error retrieving order by order_id:", error);
@@ -240,46 +256,7 @@ export class OrderService {
         // If the order is not found, return null
         return null;
       }
-
-      // Extract necessary information from the order
-      const lastStatusChange = order.status_history[order.status_history.length - 1];
-      const updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date();
-      const currentTime = new Date();
-      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime());
-      let hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)) ?? 0;
-      hoursDifference = hoursDifference != null ? hoursDifference : 0;
-      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
-      const createdAt = order.createdAt ? new Date(order.createdAt) : 0;
-      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-
-      // Calculate total revenue
-      // Calculate total revenue
-      const totalRevenueNum = order.revenues.reduce((acc, revenue) => acc + convertToNumber(revenue.amount), 0);
-
-      // Calculate total costs
-      const totalCostsNum = order.costs.reduce((acc, cost) => acc + convertToNumber(cost.amount), 0);
-
-      // Convert the amount to a number if it's a string
-      function convertToNumber(amount: number | string): number {
-        return typeof amount === 'string' ? parseFloat(amount) : amount;
-      }
-
-      // Calculate profit
-      const profit = (totalRevenueNum - totalCostsNum);
-
-      // Calculate profit percentage (rounded to two decimals) and add % sign
-      const profitPercentage = Math.round((profit / totalCostsNum) * 100);
-      // Construct and return the OrderWithCustomFields object
-      return {
-        ...order.toObject(),
-        time_in_status: hoursDifference,
-        order_total_display: formattedOrderTotal,
-        order_age: orderAge,
-        total_revenue: totalRevenueNum.toLocaleString(),
-        total_costs: totalCostsNum.toLocaleString(),
-        profit: profit.toLocaleString(),
-        profit_percentage: profitPercentage.toLocaleString() + '%'
-      } as OrderWithCustomFields;
+    return this.getDetailedOrder(order);
     } catch (error) {
       // Handle any errors
       console.error("Error retrieving order by order_id:", error);
@@ -331,7 +308,7 @@ export class OrderService {
 
     if(status == "delivered" || status == "shipped" || status == "invoice_generated"){
       if(orderId.length < 6){
-        this.updateOrderStatus(orderId, status);
+        //this.updateOrderStatus(orderId, status);
       }
     }
    
@@ -610,18 +587,7 @@ export class OrderService {
   async findByRevenueStatusWithCustomFields(status: RevenueStatus): Promise<OrderWithCustomFields[]> {
     const orders = await this.model.find({ revenue_status: status }).populate("customer").exec();
     const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
-      const lastStatusChange = order.status_history[order.status_history.length - 1]; // Assuming status_history is sorted by updatedAt
-      let updatedAt = lastStatusChange ? new Date(lastStatusChange.updatedAt) : new Date(); // If updatedAt is undefined, assign current time
-      const currentTime = new Date();
-      const timeDifference = Math.abs(currentTime.getTime() - updatedAt.getTime()); // Difference in milliseconds
-      const hoursDifference = Math.ceil(timeDifference / (1000 * 60 * 60)); // Convert milliseconds to hours
-      const formattedOrderTotal = order.order_total ? order.order_total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
-
-      // Calculate order_age if createdAt is defined
-      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
-      const orderAge = createdAt ? Math.ceil((currentTime.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)) : null; // Difference in days
-
-      return { ...order.toObject(), time_in_status: hoursDifference, order_total_display: formattedOrderTotal, order_age: orderAge } as OrderWithCustomFields; // Cast to OrderWithCustomFields
+      return this.getDetailedOrder(order)
     }));
     return ordersWithCustomFields;
   }
