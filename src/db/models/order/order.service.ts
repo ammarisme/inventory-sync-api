@@ -272,7 +272,34 @@ export class OrderService {
   }
 
   async updateOrderById(orderId: String, status: String): Promise<boolean> {
-    this.model.updateOne({ order_id: orderId }, { status: status }).exec();
+    const statusHistoryObj = {
+      status: status,
+      status_remark: "",
+      updatedAt: new Date() // Set the updatedAt time
+    };
+
+
+    await this.model.updateOne(
+      { order_id: orderId },
+      {
+        $set: { status: status },
+        $push: { status_history: statusHistoryObj }
+      }
+    ).exec();
+
+  
+      if(orderId.length < 6){
+      if(status == "delivered" || status == "shipped" ||  status == "cancelled" || status == "ndr"){
+          this.updateOrderStatus(orderId, status);
+      }
+      
+      if(status == "invoice_generated" ){
+          this.updateOrderStatus(orderId, "invoiced");
+      }
+      if(status == "invoice_pending" ){
+        this.updateOrderStatus(orderId, "invoice-pending");
+    }
+    }
     return true;
   }
 
@@ -314,7 +341,7 @@ export class OrderService {
     if(status == "invoice_generated" ){
         this.updateOrderStatus(orderId, "invoiced");
     }
-    if(status == "invoice-pending" ){
+    if(status == "invoice_pending" ){
       this.updateOrderStatus(orderId, "invoice-pending");
   }
   }
