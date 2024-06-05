@@ -306,12 +306,18 @@ export class OrderService {
       ).exec();
     }
 
-    if(status == "delivered" || status == "shipped" || status == "invoice_generated"){
-      if(orderId.length < 6){
-        //this.updateOrderStatus(orderId, status);
-      }
+    if(orderId.length < 6){
+    if(status == "delivered" || status == "shipped" ||  status == "cancelled" || status == "ndr"){
+        this.updateOrderStatus(orderId, status);
     }
-   
+    
+    if(status == "invoice_generated" ){
+        this.updateOrderStatus(orderId, "invoiced");
+    }
+    if(status == "invoice-pending" ){
+      this.updateOrderStatus(orderId, "invoice-pending");
+  }
+  }
 
     return true;
   }

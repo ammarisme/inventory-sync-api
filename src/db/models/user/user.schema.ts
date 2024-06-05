@@ -38,7 +38,7 @@ export const UserSchema = new mongoose.Schema<User>({
   organization: {
     type: Schema.Types.ObjectId,
     ref: 'User', // Reference to the User model for the rider
-    required: true,
+    required: false,
   },
 });
 
