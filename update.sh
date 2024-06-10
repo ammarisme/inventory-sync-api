@@ -1,3 +1,4 @@
+git pull
 sudo systemctl stop mongod
 sudo systemctl restart docker
 sudo docker build -t inventory-sync-api:latest .
