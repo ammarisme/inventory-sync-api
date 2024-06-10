@@ -30,6 +30,10 @@ export class OrderService {
     createOrderDto.revenues = [];
     createOrderDto.costs = [];
 
+    if (/^0\d{9}$/.test(createOrderDto.customer.phone)) {
+      createOrderDto.customer.phone = createOrderDto.customer.phone.replace(/^0/, '94');
+  }
+
     if (["cod", "cheque", "daraz"].includes((createOrderDto.selected_payment_method as { method: string }).method)) {
         createOrderDto.revenue_status = RevenueStatus.pending;
     } else {
