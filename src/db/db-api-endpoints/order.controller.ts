@@ -131,10 +131,24 @@ export class OrderController {
     }
   }
 
+
+
   @Put("/update-status-with-remark")
   async updateStatusWithRemark(@Body() dto: UpdateOrderStatusDto) {
     if((await this.service.findByOrderId(dto.order_id))){
       return this.service.updateOrderByIdWithRemark(dto.order_id, dto.status, dto.status_remark);
+    }else{
+      return {
+        'error_message': 'object doesnt exist'
+      }
+    }
+  }
+
+
+  @Put("/update-as-delivered")
+  async updateAsDelivered(@Body() dto: UpdateOrderStatusDto) {
+    if((await this.service.findByOrderId(dto.order_id))){
+     return this.service.updateOrderStatusAsDelivered(dto.order_id, dto.status, dto.selected_payment_method, dto.status_remark);
     }else{
       return {
         'error_message': 'object doesnt exist'

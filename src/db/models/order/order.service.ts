@@ -305,7 +305,9 @@ export class OrderService {
     return true;
   }
 
-  async updateOrderByIdWithRemark(orderId: String, status: String, status_remark: String): Promise<boolean> {
+  
+
+  async updateOrderStatusAsDelivered(orderId: String, status: String, my_payment_method: String, status_remark: String): Promise<boolean> {
     // Define the status history object
     const statusHistoryObj = {
       status: status,
@@ -313,6 +315,31 @@ export class OrderService {
       updatedAt: new Date() // Set the updatedAt time
     };
 
+
+    await this.model.updateOne(
+      { order_id: orderId },
+      {
+        $set: { status: status, selected_payment_method: { method: my_payment_method } },
+        $push: { status_history: statusHistoryObj }
+      }
+    ).exec();
+
+
+    if (orderId.length < 6) {
+      this.updateOrderStatus(orderId, status);
+    }
+
+    return true;
+  }
+
+  async updateOrderByIdWithRemark(orderId: String, status: String, status_remark: String): Promise<boolean> {
+    // Define the status history object
+    const statusHistoryObj = {
+      status: status,
+      status_remark: status_remark,
+      updatedAt: new Date() // Set the updatedAt time
+    };
+    
 
     // Update the order document
     if(status=="invoice_generated"){

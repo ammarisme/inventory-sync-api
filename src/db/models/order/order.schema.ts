@@ -352,6 +352,7 @@ export class UpdateOrderStatusDto {
   order_id: String;
   status: String;
   status_remark:String;
+  selected_payment_method : String;
 }
 
 export class UpdateTrackingDto {
