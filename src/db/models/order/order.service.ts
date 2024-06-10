@@ -178,12 +178,12 @@ export class OrderService {
 
 
   async findByStatusWithCustomFields(status: String): Promise<OrderWithCustomFields[]> {
-    const orders = await this.model.find({ status: status }).populate("customer").exec();
+    const orders = await this.model.find({ status: status }).sort({ createdAt: -1 }).populate("customer").exec();
     const ordersWithCustomFields = await Promise.all(orders.map(async (order) => {
-      return this.getDetailedOrder(order)
+        return this.getDetailedOrder(order);
     }));
     return ordersWithCustomFields;
-  }
+}
 
 
   getDetailedOrder(order){

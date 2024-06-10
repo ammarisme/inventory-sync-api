@@ -184,7 +184,6 @@ export class OrderController {
   }
 
   
-
   @Get()
   async findAll(): Promise<Order[]> {
     return this.service.findAll();
@@ -195,7 +194,7 @@ export class OrderController {
 
   @Get("/by-status/:status")
   async findByStatus(@Param("status") status: string): Promise<Order[]> {
-    return this.service.findOrdersByStatus(status);
+    return this.service.findByStatusWithCustomFields(status);
   }
   @Get("/uninvoiced")
   async findUninvoicedOrders(): Promise<Order[]> {
