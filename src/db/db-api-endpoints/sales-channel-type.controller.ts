@@ -26,8 +26,5 @@ export class SalesChannelTypeController {
     return this.salesChannelTypeService.updateById(id, updateSalesChannelTypeDto);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') id: string): Promise<boolean> {
-    return this.salesChannelTypeService.deleteById(id);
-  }
+ 
 }

@@ -3,6 +3,7 @@ import mongoose, { Document } from 'mongoose';
 
 @Schema()
 export class City extends Document {
+    
     @Prop({ required: true })
     id: string;
     @Prop({ required: true })

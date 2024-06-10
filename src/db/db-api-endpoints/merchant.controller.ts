@@ -26,8 +26,4 @@ export class MerchantController {
     return this.merchantService.updateById(merchantId, newData);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') merchantId: string): Promise<boolean> {
-    return this.merchantService.deleteById(merchantId);
-  }
 }

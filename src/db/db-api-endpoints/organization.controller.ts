@@ -26,10 +26,6 @@ export class OrganizationController {
     return this.service.updateById(id, newData);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') id: string): Promise<boolean> {
-    return this.service.deleteById(id);
-  }
   @Get('check/:website')
   async checkByWebsite(@Param('website') website: string): Promise<{ exists: boolean, organization : Organization }> {
     const organization = await this.service.checkByWebsite(website);

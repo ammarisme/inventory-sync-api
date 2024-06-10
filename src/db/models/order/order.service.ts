@@ -15,7 +15,7 @@ export class OrderService {
     @Inject('ORDER_MODEL')
     private model: Model<Order>,
     @Inject('CUSTOMER_MODEL')
-    private customermodel: Model<Customer>,
+    private customerModel: Model<Customer>,
     @Inject('CITY_MODEL')
     private cityModel: Model<City>,
     @Inject('STATE_MODEL')
@@ -24,87 +24,85 @@ export class OrderService {
     private productMappingModel: Model<ProductMapping>,
   ) { }
 
-  async create(createOrdeDto: CreateOrderDto): Promise<Order> {
+  async create(createOrderDto: CreateOrderDto): Promise<Order> {
     // Set the createdAt field of the order
-    createOrdeDto.createdAt = new Date();
-    createOrdeDto.revenues = []
-    createOrdeDto.costs = []
+    createOrderDto.createdAt = new Date();
+    createOrderDto.revenues = [];
+    createOrderDto.costs = [];
 
-    if (["cod", "cheque", "daraz"].includes((createOrdeDto.selected_payment_method as { method: string }).method)) {
-      createOrdeDto.revenue_status = RevenueStatus.pending;
+    if (["cod", "cheque", "daraz"].includes((createOrderDto.selected_payment_method as { method: string }).method)) {
+        createOrderDto.revenue_status = RevenueStatus.pending;
     } else {
-      createOrdeDto.revenue_status = RevenueStatus.paid;
+        createOrderDto.revenue_status = RevenueStatus.paid;
     }
 
-    createOrdeDto.cost_status = CostStatus.pending;
+    createOrderDto.cost_status = CostStatus.pending;
 
+    // Check if the customer already exists
+    let existingCustomer = await this.customerModel.findOne({ phone: createOrderDto.customer.phone });
 
-    // Create the customer DTO
-    const newCustDto: CreateCustomerDto = {
-      customer_id: createOrdeDto.customer.phone,
-      first_name: createOrdeDto.customer.first_name,
-      last_name: createOrdeDto.customer.last_name,
-      phone: createOrdeDto.customer.phone,
-      email: createOrdeDto.customer.email,
-      address1: createOrdeDto.customer.address1,
-      address2: createOrdeDto.customer.address2,
-      state: createOrdeDto.customer.state,
-      city: createOrdeDto.customer.city,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      source: createOrdeDto.source
-    };
+    if (!existingCustomer) {
+        // Create the customer DTO
+        const newCustDto: CreateCustomerDto = {
+            customer_id: createOrderDto.customer.phone,
+            first_name: createOrderDto.customer.first_name,
+            last_name: createOrderDto.customer.last_name,
+            phone: createOrderDto.customer.phone,
+            email: createOrderDto.customer.email,
+            address1: createOrderDto.customer.address1,
+            address2: createOrderDto.customer.address2,
+            state: createOrderDto.customer.state,
+            city: createOrderDto.customer.city,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            source: createOrderDto.source
+        };
 
-    if (newCustDto.city) {
+        if (newCustDto.city) {
+            const existing_city = await this.cityModel.findOne({ id: newCustDto.city });
+            if (!existing_city) {
+                const newCity = new this.cityModel({
+                    id: newCustDto.city,
+                    name: newCustDto.city,
+                    country: "sri lanka"
+                });
+                await newCity.save();
+            }
+        }
 
-      const existing_city = await this.cityModel.findOne({ id: newCustDto.city })
-      if (!existing_city) {
-        const newCity = new this.cityModel({
-          id: newCustDto.city,
-          name: newCustDto.city,
-          country: "sri lanka"
-        })
-        await newCity.save();
-      }
+        if (newCustDto.state) {
+            const existing_state = await this.stateModel.findOne({ id: newCustDto.state });
+            if (!existing_state) {
+                const newState = new this.stateModel({
+                    id: newCustDto.state,
+                    name: newCustDto.state,
+                    country: "sri lanka"
+                });
+                await newState.save();
+            }
+        }
 
+        // Create the customer using the customer service
+        existingCustomer = await this.customerModel.create(newCustDto);
     }
 
-    if (newCustDto.state) {
-
-      const existing_state = await this.stateModel.findOne({ id: newCustDto.state })
-      if (!existing_state) {
-        const newState = new this.stateModel({
-          id: newCustDto.state,
-          name: newCustDto.state,
-          country: "sri lanka"
-        })
-        await newState.save();
-      }
-
-    }
-
-
-    // Create the customer using the customer service
-    const createdCustomer = await this.customermodel.create(newCustDto);
-
-
-    createOrdeDto.revenues = this.getAllRevenues(createOrdeDto);
-    createOrdeDto.costs = this.getAllCosts(createOrdeDto);
-    createOrdeDto.invoice_generation_success_count =  0;
-
+    createOrderDto.revenues = this.getAllRevenues(createOrderDto);
+    createOrderDto.costs = this.getAllCosts(createOrderDto);
+    createOrderDto.invoice_generation_success_count = 0;
 
     // Create the order using the provided DTO
-    const createdCat = new this.model({
-      ...createOrdeDto,
-      createdAt: new Date(),
-      updatedat: new Date(),
-      customer: createdCustomer._id // Link customer to order
+    const createdOrder = new this.model({
+        ...createOrderDto,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        customer: existingCustomer._id // Link customer to order
     });
-    await createdCat.save();
+    await createdOrder.save();
 
     // Return the created order
-    return createdCat;
-  }
+    return createdOrder;
+}
+
 
 
 

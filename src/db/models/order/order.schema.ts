@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory  } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Types } from 'mongoose';
 import { Customer } from '../customer/customer.schema';
+import { ApiProperty } from '@nestjs/swagger';
 
 
 export enum RevenueStatus {
@@ -280,6 +281,7 @@ export const OrderSchema = new mongoose.Schema({
 mongoose.model('orders', OrderSchema  );
 
 export class CreateOrderDto {
+
   order_id: String;
   invoice_number: String;
   weight: Number;

@@ -26,8 +26,4 @@ export class StateController {
     return this.service.updateById(id, newData);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') id: string): Promise<boolean> {
-    return this.service.deleteById(id);
-  }
 }

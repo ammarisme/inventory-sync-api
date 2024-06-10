@@ -1,11 +1,13 @@
 import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { City } from '../models/cities/cities.schema';
 import { CityService } from '../models/cities/cities.service';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('cities')
 export class CityController {
   constructor(private readonly service: CityService) {}
 
+  @ApiResponse({ status: 200, description: 'Return all cats.' })
   @Post()
   async create(@Body() cityData: City) {
     return this.service.create(cityData);
@@ -26,8 +28,5 @@ export class CityController {
     return this.service.updateById(id, newData);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') id: string): Promise<boolean> {
-    return this.service.deleteById(id);
-  }
+
 }

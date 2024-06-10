@@ -8,6 +8,7 @@ import * as fs from 'fs/promises'; // Using promises for cleaner syntax
 import { error } from 'console';
 import { OrderSourceService } from '../models/order_source/order-source.service';
 import { OrderSource } from '../models/order_source/order-source.schema';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('orders')
 export class OrderController {
@@ -299,10 +300,6 @@ export class OrderController {
     return this.orderSourceService.updateById(id, newData);
   }
 
-  @Delete('/order-source:id')
-  async deleteOrderSourceById(@Param('id') id: string): Promise<boolean> {
-    return this.orderSourceService.deleteById(id);
-  }
 
   @Get('/revenue-status/:status')
   async findByRevenueStatusWithCustomFields(@Param('status') status: string): Promise<Order[] | null> {

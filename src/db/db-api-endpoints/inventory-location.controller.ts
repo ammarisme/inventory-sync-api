@@ -34,12 +34,5 @@ export class InventoryLocationController {
     return updatedLocation;
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') id: string): Promise<boolean> {
-    const deleted = await this.inventoryLocationService.deleteById(id);
-    if (!deleted) {
-      throw new NotFoundException('Inventory Location not found');
-    }
-    return deleted;
-  }
+
 }

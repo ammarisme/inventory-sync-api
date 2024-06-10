@@ -26,8 +26,5 @@ export class OrderSourceController {
     return this.orderSourceService.updateById(orderSourceId, newData);
   }
 
-  @Delete(':id')
-  async deleteById(@Param('id') orderSourceId: string): Promise<boolean> {
-    return this.orderSourceService.deleteById(orderSourceId);
-  }
+
 }
