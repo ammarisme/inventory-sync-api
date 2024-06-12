@@ -6,6 +6,8 @@ import { City } from '../cities/cities.schema';
 import { State } from '../state/state.schema';
 import { RevenueSchema } from '../revenue/revenue.schema';
 import { ProductMapping } from '../product_mapping/product-mapping.schema';
+import { randomBytes } from 'crypto';
+
 const axios = require('axios');
 
 @Injectable()
@@ -108,6 +110,81 @@ export class OrderService {
 }
 
 
+
+async parseDarazXlsxData(worksheet: any[]): Promise<CreateOrderDto[]> {
+  const parsedData: CreateOrderDto[] = [];
+
+  // Define the status history object
+  const statusHistoryObj = {
+    status: OrderStatuses.order_confirmed,
+    status_remark: "",
+    updatedAt: new Date() // Set the updatedAt time
+  } as never;
+
+  for (const row of worksheet) {
+    // Find the index of the order with the matching Daraz Id
+    const orderIndex = parsedData.findIndex(order => order.order_id === row['orderNumber']);
+
+    // If order exists, add line item to its line_items array
+    const mapped_product = await this.productMappingModel.findOne({ source_sku: row['sellerSku'] });
+    if (orderIndex !== -1) {
+      // If the SKU has a mapping, add that SKU instead.
+      const lineItemObj = new LineItem(
+        mapped_product != null ? mapped_product.product_name : row['itemName'],
+        mapped_product != null ? mapped_product.sku : row['sellerSku'],
+        mapped_product != null ? mapped_product.quantity : 1,
+        "piece(s)",
+        parseFloat(row['unitPrice']), // Parse unit price to float
+        0.0, // Parse item tax to float
+        0.0 // Parse item discount to float
+      );
+      parsedData[orderIndex].line_items.push(lineItemObj);
+      // Recalculate order total
+      parsedData[orderIndex].order_total = parsedData[orderIndex].line_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+    } else {
+      // If order doesn't exist, create a new order object
+      const order = new CreateOrderDto();
+      order.order_id = row['orderNumber'];
+      order.source = "daraz";
+      order.courier_id = "lk-dex";
+      order.invoice_number = "DRZ" + row['orderNumber'];
+      order.customer = {
+        customer_id: randomBytes(8).toString('hex').slice(0, 15),
+        first_name: row['customerName'],
+        last_name: "",
+        address1: row['billingAddr'],
+        address2: "",
+        city: row['billingAddr5'],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        phone: randomBytes(8).toString('hex').slice(0, 15),
+        email: row['customerEmail'],
+        state: row['billingAddr3'],
+      } as Customer;
+      order.selected_payment_method = { method: "daraz" };
+      order.tracking_number = row['trackingCode'];
+
+      const lineItemObj = new LineItem(
+        mapped_product != null ? mapped_product.product_name : row['itemName'],
+        mapped_product != null ? mapped_product.sku : row['sellerSku'],
+        mapped_product != null ? mapped_product.quantity : 1,
+        "piece(s)",
+        parseFloat(row['unitPrice']), // Parse unit price to float
+        0.0, // Parse item tax to float
+        0.0 // Parse item discount to float
+      );
+
+      order.line_items = [lineItemObj];
+      order.order_total = order.line_items.reduce((total, item) => total + (item.quantity * item.unit_price), 0);
+      order.status = OrderStatuses.order_confirmed;
+      order.status_history = [];
+      order.status_history.push(statusHistoryObj);
+      parsedData.push(order);
+    }
+  }
+
+  return parsedData;
+}
 
 
   async findAll(): Promise<Order[]> {

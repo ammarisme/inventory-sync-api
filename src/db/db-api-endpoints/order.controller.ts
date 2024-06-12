@@ -9,6 +9,8 @@ import { error } from 'console';
 import { OrderSourceService } from '../models/order_source/order-source.service';
 import { OrderSource } from '../models/order_source/order-source.schema';
 import { ApiTags } from '@nestjs/swagger';
+import * as XLSX from 'xlsx';
+
 
 @Controller('orders')
 export class OrderController {
@@ -17,7 +19,7 @@ export class OrderController {
     private readonly orderSourceService: OrderSourceService,
   ) {}
 
-  @Post("/import")
+  @Post('/import')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
@@ -25,7 +27,7 @@ export class OrderController {
         filename: (req, file, cb) => {
           randomBytes(16, (err, buffer) => {
             const randomFilename = buffer.toString('hex');
-            cb(err, `${randomFilename}_daraz.csv`); // Assuming the file is CSV
+            cb(err, `${randomFilename}_daraz.xlsx`); // Assuming the file is XLSX
           });
         },
       }),
@@ -40,46 +42,40 @@ export class OrderController {
       return { message: 'Currently only Daraz imports are supported' };
     }
 
-    const data = await fs.readFile(file.path, 'utf-8'); // Read file content
-    const orders = await this.service.parseDarazCsvData(data); // Parse the data based on your specific format
+    const data = await fs.readFile(file.path);
+    const workbook = XLSX.read(data, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const orders = await this.service.parseDarazXlsxData(worksheet);
 
-    var errors = []
-    for(const order of orders){
-      try{
-        if(!(await this.service.findByOrderId(order.order_id))){
-          if(!order.customer.phone || order.customer.phone== ""){
-            errors.push(
-              {
-                "order_id" : order.order_id,
-                'error_message': 'phone number required'
-              }
-            )
+    const errors = [];
+    for (const order of orders) {
+      try {
+        if (!(await this.service.findByOrderId(order.order_id))) {
+          if (!order.customer.phone || order.customer.phone === "") {
+            errors.push({
+              order_id: order.order_id,
+              error_message: 'phone number required',
+            });
             continue;
           }
-          this.service.create(order);
-        }else{
-          errors.push(
-            {
-              "order_id" : order.order_id,
-              'error_message': 'object exists - ' + order.order_id
-            }
-          ) 
+          await this.service.create(order);
+        } else {
+          errors.push({
+            order_id: order.order_id,
+            error_message: 'object exists - ' + order.order_id,
+          });
         }
-        //await this.service.upsertOrderByOrderId(order.order_id as string, order);
-      }catch(error){
-        errors.push(
-          {
-            "order_id" : order.order_id,
-            'error_message': error
-          }
-        )
+      } catch (error) {
+        errors.push({
+          order_id: order.order_id,
+          error_message: error.message || error,
+        });
       }
     }
-    
-    return { message: errors
-     };
-  }
 
+    return { message: errors };
+  }
 
   @Post()
   async create(@Body() orderCreateDto: CreateOrderDto) {
